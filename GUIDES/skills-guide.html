@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>worldsim — скиллы Claude Code</title>
+<style>
+  :root { --bg:#0d1117; --fg:#e6edf3; --muted:#8b949e; --accent:#58a6ff; --warn:#f0883e; --ok:#3fb950; --soft:#21262d; --code:#161b22; }
+  body { background:var(--bg); color:var(--fg); font:16px/1.65 -apple-system, Segoe UI, sans-serif; max-width:880px; margin:0 auto; padding:32px 20px 80px; }
+  h1, h2, h3 { color:var(--fg); margin-top:1.8em; }
+  h1 { border-bottom:1px solid var(--soft); padding-bottom:12px; }
+  h2 { border-bottom:1px solid var(--soft); padding-bottom:6px; }
+  a { color:var(--accent); }
+  code { background:var(--code); padding:2px 6px; border-radius:4px; font-size:0.92em; }
+  pre { background:var(--code); padding:14px 16px; border-radius:8px; overflow-x:auto; font-size:0.9em; }
+  pre code { background:none; padding:0; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; }
+  th, td { border:1px solid var(--soft); padding:8px 12px; text-align:left; vertical-align:top; }
+  th { background:var(--code); }
+  .muted { color:var(--muted); }
+  .box  { background:var(--code); border-left:3px solid var(--accent); padding:12px 16px; border-radius:4px; margin:14px 0; }
+  .warn { background:var(--code); border-left:3px solid var(--warn);  padding:12px 16px; border-radius:4px; margin:14px 0; }
+  .ok   { background:var(--code); border-left:3px solid var(--ok);    padding:12px 16px; border-radius:4px; margin:14px 0; }
+  kbd   { background:var(--soft); padding:2px 6px; border-radius:4px; font-size:0.85em; border:1px solid #444; }
+  .skill-header { display:flex; align-items:baseline; gap:12px; margin-top:1.6em; }
+  .skill-name   { font-size:1.15em; font-weight:600; font-family:monospace; color:var(--accent); }
+  .skill-tag    { font-size:0.8em; color:var(--muted); background:var(--soft); padding:2px 8px; border-radius:10px; }
+  .example-row  { display:flex; gap:8px; align-items:flex-start; margin:6px 0; }
+  .example-row .label { color:var(--muted); min-width:90px; font-size:0.88em; padding-top:3px; }
+</style>
+</head>
+<body>
+
+<h1>worldsim — скиллы Claude Code</h1>
+
+<p class="muted">Быстрый справочник: что такое скиллы, как установить и когда вызывать каждый из них.</p>
+
+<h2>Что такое скиллы</h2>
+
+<p>Скиллы — это команды Claude Code, заточенные под конкретные задачи проекта. Вместо того чтобы каждый раз объяснять Claude «синхронизируй схемы из workspace во все репо», достаточно написать <code>/schema-sync</code>.</p>
+
+<p>Технически скилл — это файл <code>SKILL.md</code> с инструкцией. Claude читает её и выполняет задачу. Все скиллы worldsim хранятся в <code>worldsim-workspace/skills/</code> и устанавливаются одним скриптом.</p>
+
+<h2>Установка</h2>
+
+<pre><code>cd repos/worldsim-workspace
+bash skills/install.sh</code></pre>
+
+<p>Скрипт найдёт папку Claude Code на вашей машине (Windows/macOS/Linux) и скопирует туда все скиллы. После этого перезапустите Claude Code.</p>
+
+<div class="ok"><strong>Проверка после установки:</strong> напишите в Claude Code <code>/check-setup</code> — он покажет что установлено правильно, а что нет.</div>
+
+<div class="warn"><strong>После обновления скиллов</strong> (например, после <code>git pull</code> в worldsim-workspace) повторно запустите <code>install.sh</code> и перезапустите Claude Code.</div>
+
+<h2>Все скиллы</h2>
+
+<table>
+  <tr><th>Скилл</th><th>Что делает</th><th>Когда использовать</th></tr>
+  <tr>
+    <td><code>/check-setup</code></td>
+    <td>Установка окружения с нуля или аудит существующего</td>
+    <td>Первый запуск на новой машине; что-то сломалось и непонятно что</td>
+  </tr>
+  <tr>
+    <td><code>/ws-status</code></td>
+    <td>Git-дашборд по всем 7 репо: ветка, ahead/behind, dirty-файлы</td>
+    <td>Перед началом работы; после переключения между репо</td>
+  </tr>
+  <tr>
+    <td><code>/github-sync</code></td>
+    <td>Pull и/или push всех репо с GitHub</td>
+    <td>Утром перед работой; перед созданием PR; после merge</td>
+  </tr>
+  <tr>
+    <td><code>/schema-sync</code></td>
+    <td>Раскатывает <code>packages/schemas</code> и <code>packages/prompts</code> во все агент-репо</td>
+    <td>После любых правок в <code>worldsim-workspace/packages/</code></td>
+  </tr>
+  <tr>
+    <td><code>/run-tests</code></td>
+    <td>Запускает pytest по всем агент-репо параллельно, сводный результат</td>
+    <td>После schema-sync; перед пушем; при рефакторинге</td>
+  </tr>
+  <tr>
+    <td><code>/scaffold-agent</code></td>
+    <td>Создаёт скелет нового агент-репо из шаблонов workspace</td>
+    <td>Когда нужен новый LLM-агент в системе</td>
+  </tr>
+</table>
+
+<h2>Подробнее по каждому скиллу</h2>
+
+<!-- ── check-setup ─────────────────────────────────────────────────── -->
+<div class="skill-header">
+  <span class="skill-name">/check-setup</span>
+  <span class="skill-tag">setup · audit</span>
+</div>
+
+<p>Двухрежимный скилл.</p>
+
+<p><strong>Setup mode</strong> — если репо не склонированы или venv отсутствует. Claude проходит по шагам: структура папок → клонирование 7 репо → создание venv → pip install → schema-sync → установка скиллов → API ключ. Каждый шаг с подтверждением.</p>
+
+<p><strong>Audit mode</strong> — если окружение уже есть. Проверяет всё и выводит таблицу:</p>
+
+<ul>
+  <li>Структура папок (sandbox не является git-репо, все 7 репо на месте)</li>
+  <li>Git remotes настроены правильно</li>
+  <li>Python venv, все пакеты установлены</li>
+  <li>ANTHROPIC_API_KEY задан</li>
+  <li>Схемы свежие (не старше 7 дней)</li>
+  <li>Скиллы установлены</li>
+  <li>CLI: git, python, gh</li>
+</ul>
+
+<p>После отчёта предлагает починить механические проблемы (pip install, schema-sync, install.sh) — сами, без вашего участия.</p>
+
+<div class="example-row">
+  <span class="label">Примеры:</span>
+  <div>
+    <code>первый запуск, помоги настроить</code><br>
+    <code>/check-setup</code><br>
+    <code>проверь что всё ок</code>
+  </div>
+</div>
+
+<!-- ── ws-status ──────────────────────────────────────────────────── -->
+<div class="skill-header">
+  <span class="skill-name">/ws-status</span>
+  <span class="skill-tag">git · overview</span>
+</div>
+
+<p>Запрашивает состояние всех 7 репо и выводит одну компактную таблицу. Видно сразу: в каком репо есть незапушенные коммиты, где отстали от remote, где есть несохранённые изменения.</p>
+
+<p>После таблицы — одна строка-подсказка: нужен ли <code>/github-sync</code> или <code>/schema-sync</code>.</p>
+
+<div class="example-row">
+  <span class="label">Примеры:</span>
+  <div>
+    <code>/ws-status</code><br>
+    <code>что изменилось в репо</code><br>
+    <code>покажи статус</code>
+  </div>
+</div>
+
+<!-- ── github-sync ────────────────────────────────────────────────── -->
+<div class="skill-header">
+  <span class="skill-name">/github-sync</span>
+  <span class="skill-tag">git · sync</span>
+</div>
+
+<p>Синхронизирует все репо с GitHub. Если направление не указано — спрашивает: pull, push или оба.</p>
+
+<p>Pull использует <code>--rebase --autostash</code>, поэтому незакоммиченные изменения не потеряются — git сам их спрячет и вернёт после rebase.</p>
+
+<p>При конфликтах останавливается и описывает проблему — не пытается разрешать автоматически.</p>
+
+<div class="example-row">
+  <span class="label">Примеры:</span>
+  <div>
+    <code>/github-sync</code><br>
+    <code>запулли все репо</code><br>
+    <code>запуш worldsim-orchestrator</code>
+  </div>
+</div>
+
+<!-- ── schema-sync ────────────────────────────────────────────────── -->
+<div class="skill-header">
+  <span class="skill-name">/schema-sync</span>
+  <span class="skill-tag">schemas · sync</span>
+</div>
+
+<p>Запускает <code>repo-setup/sync-all.sh</code> из workspace. Скрипт берёт содержимое <code>packages/schemas/</code> и <code>packages/prompts/</code> и копирует его в <code>_schemas/</code> и <code>_prompts/</code> каждого агент-репо.</p>
+
+<p>После синхронизации показывает <code>git diff --stat</code> по каждому репо — видно что реально изменилось. Напоминает запустить тесты.</p>
+
+<div class="warn">Никогда не редактируйте <code>_schemas/</code> и <code>_prompts/</code> в агент-репо вручную — они перезапишутся при следующем schema-sync.</div>
+
+<div class="example-row">
+  <span class="label">Примеры:</span>
+  <div>
+    <code>/schema-sync</code><br>
+    <code>синхронизируй схемы</code><br>
+    <code>обнови _schemas во всех агентах</code>
+  </div>
+</div>
+
+<!-- ── run-tests ──────────────────────────────────────────────────── -->
+<div class="skill-header">
+  <span class="skill-name">/run-tests</span>
+  <span class="skill-tag">tests · pytest</span>
+</div>
+
+<p>Запускает pytest параллельно во всех агент-репо (и в <code>packages/schemas</code>, <code>packages/prompts</code> workspace). Сводная таблица: ✓ passed / ✗ FAILED + количество тестов и время.</p>
+
+<p>Для упавших тестов выводит <code>--tb=short</code> прямо в ответ.</p>
+
+<p>Можно указать конкретный агент: <code>прогони тесты в worldsim-orchestrator</code>.</p>
+
+<div class="example-row">
+  <span class="label">Примеры:</span>
+  <div>
+    <code>/run-tests</code><br>
+    <code>запусти тесты</code><br>
+    <code>прогони тесты в worldsim-canon-keeper</code>
+  </div>
+</div>
+
+<!-- ── scaffold-agent ─────────────────────────────────────────────── -->
+<div class="skill-header">
+  <span class="skill-name">/scaffold-agent</span>
+  <span class="skill-tag">scaffold · new agent</span>
+</div>
+
+<p>Создаёт новый агент-репо из шаблонов workspace. Спрашивает три вещи: имя репо (<code>worldsim-*</code>), Python-имя пакета и однострочное описание.</p>
+
+<p>Что делает автоматически:</p>
+<ol>
+  <li>Запускает <code>generate-scaffold.sh</code> — создаёт структуру с README, CLAUDE.md, pyproject.toml, src/</li>
+  <li>Добавляет репо в <code>agents.txt</code></li>
+  <li>Запускает schema-sync чтобы новый агент сразу получил схемы</li>
+  <li>Делает первый git commit</li>
+  <li>Предлагает создать репо на GitHub через <code>gh</code></li>
+</ol>
+
+<div class="example-row">
+  <span class="label">Примеры:</span>
+  <div>
+    <code>/scaffold-agent</code><br>
+    <code>создай нового агента plot-weaver</code><br>
+    <code>новый агент для управления погодой</code>
+  </div>
+</div>
+
+<h2>Типичный рабочий день</h2>
+
+<pre><code># Утром — смотрим состояние и обновляемся
+/ws-status
+/github-sync   # pull
+
+# Редактируем схемы в packages/schemas/ ...
+
+# Раскатываем изменения в агенты
+/schema-sync
+
+# Проверяем что ничего не сломалось
+/run-tests
+
+# Пушим
+/github-sync   # push</code></pre>
+
+<h2>Обновление скиллов</h2>
+
+<p>Скиллы живут в <code>worldsim-workspace/skills/</code> и обновляются вместе с репо. После <code>git pull</code> в workspace:</p>
+
+<pre><code>bash skills/install.sh</code></pre>
+
+<p>Перезапустите Claude Code — новые версии подтянутся автоматически.</p>
+
+<p class="muted">Исходники скиллов: <a href="../skills/README.md">skills/README.md</a></p>
+
+</body>
+</html>
