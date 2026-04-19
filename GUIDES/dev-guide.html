@@ -8,11 +8,10 @@
     --bg:#0d1117; --fg:#e6edf3; --muted:#8b949e;
     --accent:#58a6ff; --warn:#f0883e; --ok:#3fb950;
     --soft:#21262d; --code:#161b22;
-    --toggle-bg:#21262d; --toggle-active:#58a6ff;
   }
-  body { background:var(--bg); color:var(--fg); font:16px/1.65 -apple-system, Segoe UI, sans-serif; max-width:880px; margin:0 auto; padding:32px 20px 80px; }
+  body { background:var(--bg); color:var(--fg); font:16px/1.65 -apple-system, Segoe UI, sans-serif; max-width:860px; margin:0 auto; padding:32px 20px 80px; }
   h1, h2, h3 { color:var(--fg); margin-top:1.8em; }
-  h1 { border-bottom:1px solid var(--soft); padding-bottom:12px; }
+  h1 { border-bottom:1px solid var(--soft); padding-bottom:12px; margin-bottom:0; }
   h2 { border-bottom:1px solid var(--soft); padding-bottom:6px; }
   a { color:var(--accent); }
   code { background:var(--code); padding:2px 6px; border-radius:4px; font-size:0.92em; }
@@ -21,169 +20,286 @@
   table { border-collapse:collapse; width:100%; margin:16px 0; }
   th, td { border:1px solid var(--soft); padding:8px 12px; text-align:left; vertical-align:top; }
   th { background:var(--code); }
-  .muted { color:var(--muted); font-size:0.95em; }
-  .box { background:var(--code); border-left:3px solid var(--accent); padding:12px 16px; border-radius:4px; margin:14px 0; }
+  .muted { color:var(--muted); }
+  .box  { background:var(--code); border-left:3px solid var(--accent); padding:12px 16px; border-radius:4px; margin:14px 0; }
   .warn { background:var(--code); border-left:3px solid var(--warn); padding:12px 16px; border-radius:4px; margin:14px 0; }
-  .ok   { background:var(--code); border-left:3px solid var(--ok); padding:12px 16px; border-radius:4px; margin:14px 0; }
-  kbd { background:var(--soft); padding:2px 6px; border-radius:4px; font-size:0.85em; border:1px solid #444; }
+  .ok   { background:var(--code); border-left:3px solid var(--ok);    padding:12px 16px; border-radius:4px; margin:14px 0; }
+  kbd  { background:var(--soft); padding:2px 6px; border-radius:4px; font-size:0.85em; border:1px solid #444; }
 
   /* ── toggle ── */
   .level-toggle {
-    display:inline-flex; gap:0; border-radius:8px; overflow:hidden;
-    border:1px solid var(--soft); margin:24px 0 8px; position:sticky; top:12px; z-index:10;
+    display:inline-flex; border-radius:8px; overflow:hidden;
+    border:1px solid var(--soft); margin:20px 0 4px;
+    position:sticky; top:12px; z-index:10;
   }
   .level-toggle button {
-    background:var(--toggle-bg); color:var(--muted); border:none; cursor:pointer;
-    padding:8px 22px; font-size:0.92em; transition:background 0.15s, color 0.15s;
+    background:var(--soft); color:var(--muted); border:none; cursor:pointer;
+    padding:8px 24px; font-size:0.92em; transition:background .15s, color .15s;
   }
-  .level-toggle button.active {
-    background:var(--toggle-active); color:#fff; font-weight:600;
-  }
-  .level-toggle button:first-child { border-right:1px solid var(--soft); }
+  .level-toggle button.active { background:var(--accent); color:#fff; font-weight:600; }
+  .level-toggle button:first-child { border-right:1px solid var(--bg); }
 
-  /* ── level visibility ── */
-  .beginner, .dev { display:none; }
-  body.level-beginner .beginner { display:block; }
-  body.level-dev      .dev      { display:block; }
+  /* ── panels ── */
+  .panel { display:none; }
+  body.level-beginner .panel.beginner { display:block; }
+  body.level-dev      .panel.dev      { display:block; }
 
-  /* inline spans for same-sentence upgrades */
-  span.beginner, span.dev { display:none; }
-  body.level-beginner span.beginner { display:inline; }
-  body.level-dev      span.dev      { display:inline; }
-
-  /* deep-dive callout at end of each section */
-  .deepdive {
-    background:var(--code); border-left:3px solid #3d444d;
-    padding:10px 16px; border-radius:4px; margin:12px 0;
-    font-size:0.9em; color:var(--muted);
-    display:none;
+  /* prompt quote style */
+  blockquote {
+    border-left:3px solid var(--accent); margin:10px 0; padding:10px 16px;
+    background:var(--code); border-radius:0 4px 4px 0; font-style:italic;
+    color:#c9d1d9;
   }
-  .deepdive strong { color:var(--fg); }
-  body.level-beginner .deepdive { display:block; }
-
-  /* hint at end of beginner section pointing to dev */
-  .upgrade-hint {
-    color:var(--muted); font-size:0.88em; margin-top:6px;
-  }
-  .upgrade-hint .toggle-link {
-    color:var(--accent); cursor:pointer; text-decoration:underline dotted;
-  }
+  blockquote em { font-style:normal; color:var(--muted); font-size:0.88em; }
 </style>
 </head>
 <body class="level-beginner">
 
 <h1>worldsim — руководство разработчика</h1>
-
-<p class="muted">Два режима: <strong>Новичок</strong> — только то, что нужно знать сразу.
-<strong>Разработчик</strong> — те же разделы с полными деталями, инструментами и edge-case.
-Усвоили базу — переключитесь и прочитайте, что стоит за каждым пунктом.</p>
+<p class="muted" style="margin-top:10px">Выберите уровень — два независимых текста, одни и те же разделы.</p>
 
 <div class="level-toggle">
-  <button class="active" onclick="setLevel('beginner', this)">Новичок</button>
-  <button onclick="setLevel('dev', this)">Разработчик</button>
+  <button class="active" onclick="setLevel('beginner',this)">Новичок</button>
+  <button onclick="setLevel('dev',this)">Разработчик</button>
 </div>
 
 
-<!-- ═══════════════════════════════════════════════
-     0. Как это устроено
-═══════════════════════════════════════════════ -->
-<h2>0. Как это устроено</h2>
+<!-- ════════════════════════════════════════════
+     НОВИЧОК
+════════════════════════════════════════════ -->
+<div class="panel beginner">
 
-<div class="beginner">
-  <p>Игра <code>worldsim</code> — 7 независимых git-репо. Один из них —
-  <code>worldsim-workspace</code> — ваша рабочая папка с документацией и
-  общими пакетами. Остальные шесть — отдельные агенты (мозги игры):
-  оркестратор, мир-движок, хранитель канона, рассказчик, диалог NPC,
-  прогрессия игрока.</p>
-  <p>Агенты общаются не по сети, а как pip-пакеты внутри одного процесса.
-  Никаких контейнеров и очередей — просто функции.</p>
-  <div class="box"><strong>Архитектура целиком →
-  <a href="architecture-guide.html">architecture-guide.html</a>.</strong>
-  Прочитайте её первой.</div>
-</div>
-
-<div class="dev">
-  <p>Игра — 7 независимых git-репо. <code>worldsim-workspace</code> — source of truth:
-  pydantic-схемы канона, базовый prompt-клиент, sync-скрипты, HTML-гайды.
-  Шесть агент-репо — stateless callable'ы, установленные в editable-режиме.</p>
-  <p>Поток хода: <em>orchestrator</em> принимает ввод игрока →
-  валидирует intent (hard + soft constraints) →
-  последовательно вызывает нужные агенты →
-  агенты читают/пишут canonical state через структуры из <code>worldsim_schemas</code> →
-  orchestrator сохраняет результат и возвращает сцену.</p>
-  <p>Агенты <strong>stateless</strong>: они не хранят ничего между ходами.
-  Весь state — в save-файле, который orchestrator передаёт в каждый вызов.</p>
-  <div class="box"><strong>Детально: <a href="architecture-guide.html">architecture-guide.html</a>,
-  <a href="../docs/loop.md">docs/loop.md</a> (13 шагов хода),
-  <a href="../docs/agent-map.md">docs/agent-map.md</a> (кто что пишет в канон).</strong></div>
-</div>
-
-<div class="deepdive">
-  <strong>Хотите больше?</strong> В режиме Разработчик — поток хода пошагово,
-  stateless-модель и почему это важно.
-  <div class="upgrade-hint"><span class="toggle-link" onclick="setLevelByLink('dev')">Переключиться →</span></div>
-</div>
+<p>Вы делегируете Клоду всё, что можно. Ваша задача — понимать,
+<em>что</em> просить, и проверять, что получилось. Код руками писать не нужно.</p>
 
 
-<!-- ═══════════════════════════════════════════════
-     1. Первый запуск
-═══════════════════════════════════════════════ -->
+<h2>0. За одну минуту: что это такое</h2>
+
+<p>Игра состоит из семи независимых частей — агентов. Каждый агент отвечает
+за свою зону: один генерирует мир, другой следит за историей, третий
+ведёт диалоги NPC и так далее. Они работают вместе, не видя внутрь
+друг друга.</p>
+
+<p>Поведение агентов задаётся текстовыми инструкциями — промптами. Это
+обычные файлы на обычном языке. Когда вы хотите что-то изменить в игре,
+почти всегда достаточно поправить один такой файл — и Клод сделает это
+за вас.</p>
+
+<div class="box">Хотите понять архитектуру глубже —
+<a href="architecture-guide.html">architecture-guide.html</a>.</div>
+
+
 <h2>1. Первый запуск</h2>
 
-<div class="beginner">
-  <h3>1.1. Клонируйте 7 репо рядом</h3>
-  <pre><code>mkdir worldsim && cd worldsim
-for r in worldsim-workspace worldsim-orchestrator worldsim-world-builder \
-         worldsim-canon-keeper worldsim-scene-master worldsim-npc-mind \
-         worldsim-personal-progression; do
-  git clone "https://github.com/worldsim-rpg/$r.git"
-  git -C "$r" checkout dev
-done</code></pre>
-  <p>Все семь — <strong>на одном уровне</strong>. Sync-скрипт ищет их как соседние папки.</p>
+<p>Перед началом у вас должны быть:</p>
+<ul>
+  <li>Python 3.11 или новее</li>
+  <li>API-ключ Anthropic (получить на <a href="https://console.anthropic.com">console.anthropic.com</a>)</li>
+  <li>Аккаунт на GitHub</li>
+</ul>
 
-  <h3>1.2. Python 3.11+, venv</h3>
-  <pre><code>cd worldsim-workspace
-python -m venv .venv
-.venv\Scripts\activate      # Windows
-source .venv/bin/activate   # macOS/Linux</code></pre>
+<p>Скажите Клоду:</p>
+<blockquote>
+  Склонируй все семь worldsim-репо из организации worldsim-rpg на GitHub,
+  настрой виртуальное окружение Python, установи все зависимости и создай
+  файл с API-ключом. Ключ: <em>вставьте сюда</em>.
+</blockquote>
 
-  <h3>1.3. Установка</h3>
-  <pre><code>pip install -e packages/schemas
-pip install -e packages/prompts
-pip install -e ../worldsim-world-builder
-pip install -e ../worldsim-canon-keeper
-pip install -e ../worldsim-scene-master
-pip install -e ../worldsim-npc-mind
-pip install -e ../worldsim-personal-progression
-pip install -e ../worldsim-orchestrator   # последним</code></pre>
+<p>Когда Клод закончит, проверьте что всё работает:</p>
+<blockquote>
+  Запусти <code>worldsim new</code> и создай тестовый мир.
+</blockquote>
 
-  <h3>1.4. API-ключ</h3>
-  <pre><code>cp ../worldsim-orchestrator/.env.example ../worldsim-orchestrator/.env
-# откройте .env и впишите ANTHROPIC_API_KEY</code></pre>
+<p>Если появились ошибки — скопируйте текст ошибки и отдайте Клоду.</p>
 
-  <h3>1.5. Запуск</h3>
-  <pre><code>worldsim new                 # создать мир
-worldsim play --world &lt;id&gt;   # играть
-worldsim worlds              # список миров</code></pre>
+
+<h2>2. Когда что-то не работает</h2>
+
+<p>Почти всегда достаточно описать симптом Клоду — он разберётся.</p>
+
+<table>
+  <tr><th>Что происходит</th><th>Что сказать Клоду</th></tr>
+  <tr>
+    <td>Игра не запускается, ошибка при старте</td>
+    <td>«Скопируй ошибку и разберись с установкой»</td>
+  </tr>
+  <tr>
+    <td>Игра говорит «не могу» на каждое действие</td>
+    <td>«Найди, какое ограничение срабатывает, и объясни мне»</td>
+  </tr>
+  <tr>
+    <td>NPC ведёт себя не так, как хотелось бы</td>
+    <td>«Найди промпт, который управляет поведением NPC в диалоге»</td>
+  </tr>
+  <tr>
+    <td>Сцены скучные или слишком длинные</td>
+    <td>«Найди промпт рассказчика и покажи мне, что там написано»</td>
+  </tr>
+  <tr>
+    <td>Что-то сломалось после изменений</td>
+    <td>«Откати последнее изменение в [название репо]»</td>
+  </tr>
+</table>
+
+
+<h2>3. Где живут изменения</h2>
+
+<p>Запомните одно правило: <strong>поведение игры — это текст, не код.</strong>
+Почти всё, что вы хотите изменить, лежит в файлах <code>prompts/*.md</code>
+внутри каждого агента. Это обычный текст с инструкциями.</p>
+
+<p>Код трогать не нужно. Когда Клод предлагает изменить
+<code>.py</code>-файл — уточните, точно ли это не промпт:</p>
+<blockquote>
+  Ты уверен, что это нужно менять в коде, а не в промпте?
+</blockquote>
+
+
+<h2>4. Как попросить добавить фичу</h2>
+
+<p>Рабочий порядок — сначала план, потом правки:</p>
+
+<ol>
+  <li>
+    <strong>Опишите желаемое поведение.</strong> Не «исправь файл X» —
+    а что должно измениться в игре:
+    <blockquote>
+      Хочу, чтобы NPC запоминали, когда игрок им врёт, и в следующий
+      раз встречали его с недоверием.
+    </blockquote>
+  </li>
+  <li>
+    <strong>Попросите план.</strong>
+    <blockquote>
+      Предложи план изменений. Пока ничего не меняй — только объясни,
+      что и где нужно поправить.
+    </blockquote>
+  </li>
+  <li>
+    <strong>Проверьте план.</strong> Хороший знак — изменения касаются
+    одного агента и одного-двух промпт-файлов. Плохой знак — план
+    затрагивает много репо сразу. Тогда скажите:
+    <blockquote>
+      Разбей на отдельные шаги, по одному агенту за раз.
+    </blockquote>
+  </li>
+  <li>
+    <strong>После правок — проверьте живьём.</strong>
+    <blockquote>
+      Создай новый тестовый мир и проверь, что изменение работает.
+    </blockquote>
+  </li>
+</ol>
+
+
+<h2>5. Что нельзя просить Клода делать</h2>
+
+<div class="warn">
+  <p>Есть несколько запретов, которые нужно держать в голове.
+  Если Клод предлагает что-то из списка — остановите его.</p>
+  <ul>
+    <li><strong>Не давайте двум агентам писать в одно и то же место.</strong>
+    Если план говорит «world-builder запишет это в player_progression» —
+    это ошибка. Скажите Клоду: «Это должен делать только тот агент,
+    который отвечает за эту зону».</li>
+    <li><strong>Не добавляйте новых агентов.</strong> Их шесть — этого достаточно.
+    Любую фичу можно вписать в существующего.</li>
+    <li><strong>Не ломайте старые сохранения.</strong> Если план меняет
+    структуру данных игры — спросите Клода: «Старые сейвы будут работать
+    после этого изменения?»</li>
+  </ul>
 </div>
 
-<div class="dev">
-  <h3>1.1. Клон + ветка dev</h3>
-  <pre><code>mkdir worldsim && cd worldsim
+
+<h2>6. Рабочий ритм</h2>
+
+<ol>
+  <li>Описываете желаемое поведение → просите план → апрувите план.</li>
+  <li>Клод делает правки → запускает тесты → создаёт новый тестовый мир.</li>
+  <li>Вы проверяете игру. Если не то — описываете разницу.</li>
+  <li>Клод коммитит и отправляет изменения в ветку <code>dev</code>.</li>
+</ol>
+
+<div class="box">
+  <strong>Полезная фраза для любой задачи:</strong><br>
+  «Предложи план, объясни какие файлы затронешь и почему, потом жди моего
+  подтверждения перед тем как начать».
+</div>
+
+
+<h2>7. Как обновиться</h2>
+
+<p>Когда выходят обновления, скажите Клоду:</p>
+<blockquote>
+  Подтяни последние изменения во всех worldsim-репо из ветки dev,
+  запусти синхронизацию схем и убедись, что тесты проходят.
+</blockquote>
+
+
+<h2>8. Что читать дальше</h2>
+
+<ul>
+  <li><a href="architecture-guide.html">architecture-guide.html</a> — как агенты связаны между собой.</li>
+  <li><a href="skills-guide.html">skills-guide.html</a> — как устроена прогрессия персонажа.</li>
+</ul>
+
+<div class="ok">
+  Освоились с базой? Переключитесь в режим <strong>Разработчик</strong> —
+  те же разделы, но с полными техническими деталями.
+</div>
+
+</div><!-- /panel.beginner -->
+
+
+<!-- ════════════════════════════════════════════
+     РАЗРАБОТЧИК
+════════════════════════════════════════════ -->
+<div class="panel dev">
+
+<p>Вы контролируете Клод, а не делегируете ему всё. Понимаете структуру
+репо, читаете промпты и agent.py, сами принимаете решения о том, где
+и что менять.</p>
+
+
+<h2>0. Архитектура за две минуты</h2>
+
+<p>Семь git-репо. <code>worldsim-workspace</code> — source of truth:
+pydantic-схемы канона, базовый prompt-клиент, sync-скрипты.
+Шесть агент-репо — stateless callable'ы, установленные через <code>pip install -e</code>.</p>
+
+<p><strong>Поток хода:</strong> orchestrator принимает ввод →
+валидирует intent (hard + soft constraints) →
+вызывает нужные агенты →
+агенты читают/пишут <code>worldsim_schemas</code>-объекты →
+orchestrator сохраняет state и возвращает сцену.</p>
+
+<p>Агенты <strong>stateless</strong> — весь state в save-файле, который
+orchestrator передаёт на каждый вызов.</p>
+
+<div class="box">
+  <a href="architecture-guide.html">architecture-guide.html</a> — полная архитектура.<br>
+  <a href="../docs/loop.md">docs/loop.md</a> — 13 шагов хода.<br>
+  <a href="../docs/agent-map.md">docs/agent-map.md</a> — кто что пишет в канон.
+</div>
+
+
+<h2>1. Первый запуск</h2>
+
+<h3>Клон + ветки</h3>
+<pre><code>mkdir worldsim && cd worldsim
 for r in worldsim-workspace worldsim-orchestrator worldsim-world-builder \
          worldsim-canon-keeper worldsim-scene-master worldsim-npc-mind \
          worldsim-personal-progression; do
   git clone "https://github.com/worldsim-rpg/$r.git"
   git -C "$r" checkout dev
 done</code></pre>
-  <p>Все семь — на одном уровне. Sync ищет соседей по <code>../worldsim-*</code>.</p>
-  <p><strong>Ветки:</strong> <code>dev</code> (прямой push разработчику) →
-  <code>staging</code> (PR с апрувом) → <code>main</code> (деплой).
-  Push в staging/main заблокирован branch protection.</p>
+<p>Все семь — на одном уровне. Sync ищет соседей по <code>../worldsim-*</code>.</p>
+<p>Ветки: <code>dev</code> (прямой push) → <code>staging</code> (PR + апрув) →
+<code>main</code> (деплой). Push в staging/main заблокирован branch protection.</p>
 
-  <h3>1.2. Editable install</h3>
-  <pre><code>cd worldsim-workspace
-python -m venv .venv && source .venv/bin/activate   # или Scripts\activate на Windows
+<h3>Editable install</h3>
+<pre><code>cd worldsim-workspace
+python -m venv .venv && source .venv/bin/activate   # Windows: Scripts\activate
 pip install -e packages/schemas
 pip install -e packages/prompts
 pip install -e ../worldsim-world-builder
@@ -191,372 +307,209 @@ pip install -e ../worldsim-canon-keeper
 pip install -e ../worldsim-scene-master
 pip install -e ../worldsim-npc-mind
 pip install -e ../worldsim-personal-progression
-pip install -e ../worldsim-orchestrator</code></pre>
-  <p><code>-e</code> (editable) означает: изменения в <code>src/</code> подхватываются
-  без переустановки. Orchestrator ставится последним — он тянет <code>typer</code>,
-  <code>rich</code>, <code>anthropic</code> и регистрирует CLI-точку входа.</p>
+pip install -e ../worldsim-orchestrator   # последним — регистрирует CLI</code></pre>
 
-  <h3>1.3. Переменные окружения</h3>
-  <pre><code>cp ../worldsim-orchestrator/.env.example ../worldsim-orchestrator/.env
-# .env читается через python-dotenv при старте orchestrator</code></pre>
-  <p>Для отладки: <code>WORLDSIM_DEBUG=1 worldsim play --world &lt;id&gt;</code> —
-  в stderr будет raw-ответ LLM перед JSON-парсингом.</p>
+<h3>ENV + проверка</h3>
+<pre><code>cp ../worldsim-orchestrator/.env.example ../worldsim-orchestrator/.env
+# вписать ANTHROPIC_API_KEY
 
-  <h3>1.4. Проверка установки</h3>
-  <pre><code>python -c "import worldsim_schemas; print(worldsim_schemas.__version__)"
-python -m pytest -q packages/schemas/   # убедиться, что схемы чистые</code></pre>
-</div>
+python -c "import worldsim_schemas; print(worldsim_schemas.__version__)"
+python -m pytest -q packages/schemas/</code></pre>
 
-<div class="deepdive">
-  <strong>Хотите больше?</strong> В режиме Разработчик — зачем <code>-e</code>, как работает
-  <code>WORLDSIM_DEBUG</code>, и как проверить установку без запуска игры.
-</div>
+<p>Отладка: <code>WORLDSIM_DEBUG=1 worldsim play --world &lt;id&gt;</code> —
+в stderr raw-ответ LLM перед JSON-парсингом.</p>
 
 
-<!-- ═══════════════════════════════════════════════
-     2. Когда что-то не работает
-═══════════════════════════════════════════════ -->
 <h2>2. Когда что-то не работает</h2>
 
-<div class="beginner">
-  <table>
-    <tr><th>Симптом</th><th>Куда идти</th></tr>
-    <tr><td>ImportError при старте</td><td>Не все пакеты/агенты установлены через <code>pip install -e</code>. Проверьте активный venv.</td></tr>
-    <tr><td>"ANTHROPIC_API_KEY not set"</td><td><code>worldsim-orchestrator/.env</code> не создан или не активирован.</td></tr>
-    <tr><td>Игра повторяет "не могу, потому что X"</td><td>Срабатывает hard-validator. Файл: <code>worldsim-orchestrator/src/.../validators.py</code>.</td></tr>
-    <tr><td>NPC знает лишнее</td><td>Промпт <code>worldsim-npc-mind/prompts/dialog.md</code> или поле <code>knowledge</code> при init.</td></tr>
-    <tr><td>Сцены сухие / длинные</td><td><code>worldsim-scene-master/prompts/render.md</code>.</td></tr>
-    <tr><td>Игрок бесконечно качает скилл</td><td>Пороги в <code>worldsim-personal-progression/prompts/progression.md</code>.</td></tr>
-    <tr><td>LLM возвращает мусор / падает JSON</td><td>Включите <code>WORLDSIM_DEBUG=1</code> — в stderr будет raw-ответ модели.</td></tr>
-  </table>
-</div>
+<table>
+  <tr><th>Симптом</th><th>Причина</th><th>Диагностика</th></tr>
+  <tr>
+    <td>ImportError при старте</td>
+    <td>Пакет не установлен или другой venv</td>
+    <td><code>pip list | grep worldsim</code> — должны быть все 8.</td>
+  </tr>
+  <tr>
+    <td>"ANTHROPIC_API_KEY not set"</td>
+    <td><code>.env</code> не найден</td>
+    <td>Проверьте <code>worldsim-orchestrator/.env</code>, venv активен?</td>
+  </tr>
+  <tr>
+    <td>Hard-validator блокирует</td>
+    <td><code>validators.py</code> вернул <code>ok=False</code></td>
+    <td><code>WORLDSIM_DEBUG=1</code> — покажет <code>code</code> и <code>message</code> из <code>ConstraintResult</code>.</td>
+  </tr>
+  <tr>
+    <td>NPC знает лишнее</td>
+    <td>Широкий <code>knowledge</code> при init или утечка в промпт</td>
+    <td>Проверьте <code>world_init.md</code> — какие факты попадают в <code>knowledge</code>.</td>
+  </tr>
+  <tr>
+    <td>Сцены сухие / длинные</td>
+    <td>Инструкции по тону в <code>render.md</code></td>
+    <td>Правьте раздел "Style rules", запускайте <code>worldsim new</code>.</td>
+  </tr>
+  <tr>
+    <td>Бесконечный грайнд скилла</td>
+    <td>Пороги в <code>progression.md</code></td>
+    <td>Раздел "Thresholds" — XP-значения и decay-коэффициент.</td>
+  </tr>
+  <tr>
+    <td>JSON-парс упал</td>
+    <td>LLM обернул ответ в markdown-блок</td>
+    <td><code>WORLDSIM_DEBUG=1</code> → raw-ответ. Добавьте "Return only valid JSON, no markdown fences" в конец промпта.</td>
+  </tr>
+</table>
 
-<div class="dev">
-  <table>
-    <tr><th>Симптом</th><th>Причина</th><th>Как диагностировать</th></tr>
-    <tr><td>ImportError при старте</td><td>Пакет не установлен или другой venv</td><td><code>pip list | grep worldsim</code> — должны быть все 8 пакетов.</td></tr>
-    <tr><td>"ANTHROPIC_API_KEY not set"</td><td><code>.env</code> не найден или python-dotenv не загружен</td><td>Проверьте <code>../worldsim-orchestrator/.env</code>, убедитесь что venv активен.</td></tr>
-    <tr><td>Hard-validator блокирует</td><td>Constraint в <code>validators.py</code> вернул <code>ok=False</code></td><td><code>WORLDSIM_DEBUG=1</code> покажет <code>code</code> и <code>message</code> из <code>ConstraintResult</code>. Ищите нужный тест в <code>tests/test_validators.py</code>.</td></tr>
-    <tr><td>NPC знает лишнее</td><td>Слишком широкий <code>knowledge</code> при init или утечка в промпт</td><td>Проверьте <code>world_init.md</code> — какие факты передаются в <code>knowledge</code>. Смотрите raw LLM-ответ через <code>DEBUG</code>.</td></tr>
-    <tr><td>Сцены сухие / длинные</td><td>Инструкции по тону/длине в <code>render.md</code></td><td>Правьте раздел "Style rules" в промпте, запускайте <code>worldsim new</code>, смотрите результат.</td></tr>
-    <tr><td>Бесконечный грайнд скилла</td><td>Порог или decay в <code>progression.md</code></td><td>Проверьте раздел "Thresholds" — там числовые значения XP и decay-коэффициент.</td></tr>
-    <tr><td>JSON-парс упал</td><td>LLM вернул невалидный JSON или обёрнул в markdown</td><td><code>WORLDSIM_DEBUG=1</code> → посмотрите raw-ответ. Часто проблема решается добавлением "Return only valid JSON, no markdown fences" в конец промпта.</td></tr>
-  </table>
-  <p><strong>Общий принцип:</strong> сначала <code>WORLDSIM_DEBUG=1</code>, потом промпты,
-  потом <code>agent.py</code>. Код трогать в последнюю очередь.</p>
-</div>
-
-<div class="deepdive">
-  <strong>Хотите больше?</strong> В режиме Разработчик — детальные причины каждого симптома,
-  как читать debug-вывод и где именно в промпте искать.
-</div>
+<p><strong>Принцип:</strong> сначала <code>WORLDSIM_DEBUG=1</code>, потом промпты, потом <code>agent.py</code>.</p>
 
 
-<!-- ═══════════════════════════════════════════════
-     3. Где правят — железное правило
-═══════════════════════════════════════════════ -->
-<h2>3. Где правят — железное правило</h2>
+<h2>3. Структура агента и где правят</h2>
 
-<div class="beginner">
-  <div class="warn">
-    <strong>90% изменений — это правка markdown-промптов, не Python.</strong>
-    Если Claude Code хочет залезть в <code>.py</code> — сначала спросите:
-    <em>точно ли это не промпт?</em>
-  </div>
-  <p>Каждый агент: код в <code>src/.../agent.py</code> — тонкий клей
-  «возьми input → подставь в промпт → спарси JSON».
-  Поведение живёт в <code>prompts/*.md</code>.</p>
-</div>
-
-<div class="dev">
-  <div class="warn">
-    <strong>90% изменений — промпты, не Python.</strong>
-  </div>
-  <p>Структура каждого агент-репо:</p>
-  <pre><code>worldsim-&lt;agent&gt;/
+<pre><code>worldsim-&lt;agent&gt;/
 ├── src/worldsim_&lt;agent&gt;/
-│   └── agent.py        ← тонкий клей: IO + prompt call + JSON parse
+│   └── agent.py        ← IO + prompt call + JSON parse, бизнес-логики нет
 ├── prompts/
 │   ├── system.md       ← system prompt (роль агента)
 │   └── *.md            ← операционные промпты (turn, init, …)
-├── _schemas/           ← снимок схем (не редактировать руками)
-└── _prompts/           ← снимок prompt-утилит (не редактировать руками)</code></pre>
-  <p><strong>Контракт <code>agent.py</code>:</strong> принимает pydantic-объект
-  из <code>worldsim_schemas</code>, формирует строку промпта, вызывает
-  <code>anthropic.messages.create()</code>, парсит JSON-ответ обратно
-  в pydantic-объект и возвращает его orchestrator'у.
-  Никакой бизнес-логики в <code>agent.py</code> — только клей.</p>
-  <p>Если нужно изменить <em>что</em> агент делает — правьте промпт.
-  Если нужно изменить <em>как</em> передаётся данные между агентами —
-  правьте схему + agent.py + промпт.</p>
-</div>
+├── _schemas/           ← снимок схем (sync-only, руками не трогать)
+└── _prompts/           ← снимок prompt-утилит (sync-only)</code></pre>
 
-<div class="deepdive">
-  <strong>Хотите больше?</strong> В режиме Разработчик — полная структура агент-репо
-  и контракт <code>agent.py</code>.
+<p><strong>Контракт <code>agent.py</code>:</strong> принимает pydantic-объект из
+<code>worldsim_schemas</code> → формирует промпт → вызывает
+<code>anthropic.messages.create()</code> → парсит JSON обратно в pydantic →
+возвращает orchestrator'у. Никакой бизнес-логики.</p>
+
+<div class="warn">
+  Менять поведение → промпт.<br>
+  Менять передаваемые данные → схема + agent.py + промпт.<br>
+  Лезть в <code>agent.py</code> без изменения схемы — почти всегда ошибка.
 </div>
 
 
-<!-- ═══════════════════════════════════════════════
-     4. Как добавить фичу
-═══════════════════════════════════════════════ -->
-<h2>4. Как добавить фичу, не сломав всё</h2>
+<h2>4. Как добавить фичу</h2>
 
-<div class="beginner">
-  <ol>
-    <li><strong>Найдите зону.</strong> Откройте <code>docs/agent-map.md</code> — там таблица,
-    кто что пишет в канон. Фича должна полностью лежать в одной зоне.</li>
-    <li><strong>Нужно новое поле?</strong> Правьте схему в workspace → sync → поддержка в агентах → промпт.</li>
-    <li><strong>Новое ограничение?</strong> Добавьте функцию в <code>validators.py</code> + тест.</li>
-    <li><strong>Новое поведение NPC / soft-характеристика?</strong> Только промпты, никакого кода.</li>
-  </ol>
-</div>
+<h3>4.1. Определите зону</h3>
+<p><code>docs/agent-map.md</code> — таблица: агент → какие поля канона пишет.
+Фича должна полностью лежать в одной зоне. Если тянет в несколько — разбейте
+на атомарные изменения, отдельные PR.</p>
 
-<div class="dev">
-  <h3>4.1. Определите зону</h3>
-  <p>Откройте <code>docs/agent-map.md</code>. Колонки: агент → какие поля канона он пишет.
-  Фича должна полностью укладываться в одну зону. Если тянет в несколько — разделите
-  на атомарные изменения и заводите отдельные PR.</p>
+<h3>4.2. Новое поле в схеме</h3>
+<ol>
+  <li>Правка в <code>packages/schemas/src/worldsim_schemas/schemas.py</code>.</li>
+  <li><code>python -m pytest -q packages/schemas/</code>.</li>
+  <li><code>./repo-setup/sync-all.sh</code> — раскатит в <code>_schemas/</code> всех агентов.</li>
+  <li>В каждом <code>agent.py</code>, который читает/пишет это поле — добавить поддержку.</li>
+  <li>Промпт, который генерирует поле — правка <code>prompts/*.md</code>.</li>
+</ol>
+<div class="warn"><strong>Никогда не правьте <code>_schemas/</code> руками.</strong>
+Только workspace → sync.</div>
 
-  <h3>4.2. Изменение схемы (новое поле в сущности)</h3>
-  <ol>
-    <li>Правка в <code>packages/schemas/src/worldsim_schemas/schemas.py</code>.</li>
-    <li><code>python -m pytest -q packages/schemas/</code>.</li>
-    <li><code>./repo-setup/sync-all.sh</code> — раскатит новые схемы в <code>_schemas/</code>
-    каждого агент-репо.</li>
-    <li>В каждом агент-репо, где <code>agent.py</code> читает/пишет это поле — добавьте поддержку.</li>
-    <li>Промпт, который должен генерировать это поле — правка <code>prompts/*.md</code>.</li>
-  </ol>
-  <div class="warn"><strong>Никогда не правьте <code>_schemas/</code> внутри агент-репо руками.</strong>
-  Это снимок. Единственный путь — workspace → sync.</div>
+<h3>4.3. Новая hard-constraint</h3>
+<p><code>worldsim-orchestrator/src/.../validators.py</code> — каждая constraint
+возвращает <code>ConstraintResult(ok, code, message)</code>, вызов добавляется
+в <code>validate_intent</code>.</p>
+<p>Тесты обязательны: <code>tests/test_validators.py</code>.
+Один позитивный + один негативный на каждый constraint.</p>
 
-  <h3>4.3. Новая hard-constraint</h3>
-  <p>Живут в <code>worldsim-orchestrator/src/.../validators.py</code>.
-  Каждая — маленькая функция, возвращает <code>ConstraintResult(ok, code, message)</code>.
-  Добавьте вызов в <code>validate_intent</code>.</p>
-  <p>Тесты обязательны: <code>tests/test_validators.py</code>.
-  Один позитивный + один негативный на каждый constraint.</p>
+<h3>4.4. Новое поведение / soft-характеристика</h3>
+<p>Только промпты. Найдите промпт (обычно <code>turn_update.md</code> или
+<code>world_init.md</code>), добавьте пункт в раздел "Rules". Если нужно
+новое поле — сначала п. 4.2. Тестируйте на свежем <code>worldsim new</code>,
+не на старых сейвах.</p>
 
-  <h3>4.4. Новое поведение NPC / soft-характеристика</h3>
-  <p>Только промпты:</p>
-  <ol>
-    <li>Найдите промпт, который генерирует это поведение (обычно <code>turn_update.md</code>
-    или <code>world_init.md</code>).</li>
-    <li>Добавьте в раздел "Rules" новый пункт.</li>
-    <li>Если нужно новое поле — сначала п. 4.2.</li>
-    <li>Запустите <code>worldsim new</code>, создайте свежий мир, проверьте живьём.
-    <em>Не тестируйте на старых сейвах.</em></li>
-  </ol>
-</div>
 
-<div class="deepdive">
-  <strong>Хотите больше?</strong> В режиме Разработчик — пошагово: схема → sync → agent.py →
-  промпт, как писать constraints с тестами, почему нельзя тестировать на старых сейвах.
+<h2>5. Что запрещено и почему</h2>
+
+<div class="warn">
+  <ul>
+    <li><strong>Один файл канона — один писатель.</strong>
+    Два агента в одном поле → orchestrator не может детерминировано разрешить конфликт.</li>
+
+    <li><strong>Не добавляйте новых агентов.</strong>
+    Каждый новый — новый LLM-вызов, новый источник расхождений, новое место для JSON-ошибки.</li>
+
+    <li><strong>Монотонные инварианты нельзя обращать.</strong>
+    <code>progress</code>, <code>known_facts</code>, <code>Secret.status</code>,
+    <code>condition=dead</code> — только в одну сторону.
+    Canon-keeper строит consistency-проверки на этом допущении.</li>
+
+    <li><strong>Схема сейва — только с бэксовместимостью.</strong>
+    Новые поля через <code>Optional[T] = None</code> или pydantic-default.
+    Подробности: <a href="../docs/schema-versioning.md">docs/schema-versioning.md</a>.</li>
+  </ul>
 </div>
 
 
-<!-- ═══════════════════════════════════════════════
-     5. Что запрещено
-═══════════════════════════════════════════════ -->
-<h2>5. Что запрещено</h2>
+<h2>6. Рабочий ритм</h2>
 
-<div class="beginner">
-  <div class="warn">
-    <ul>
-      <li><strong>Один файл канона — один писатель.</strong> Если world-builder хочет записать что-то в <code>player_progression</code> — это ошибка.</li>
-      <li><strong>Не добавляйте новых агентов</strong> без веской причины. Сейчас их 6.</li>
-      <li><strong>Не ломайте монотонность инвариантов:</strong> progress, known_facts, Secret.status, condition=dead — только в одну сторону.</li>
-      <li><strong>Не меняйте схему сейва без бэксовместимости.</strong> Старые сохранения не должны умирать после <code>git pull</code>.</li>
-    </ul>
-  </div>
-</div>
-
-<div class="dev">
-  <div class="warn">
-    <ul>
-      <li><strong>Один файл канона — один писатель.</strong>
-      <em>Почему:</em> если два агента пишут в одно поле, orchestrator не может
-      детерминировано разрешить конфликт. Всегда добавляйте патч в зону ответственного агента.</li>
-
-      <li><strong>Не добавляйте новых агентов без веской причины.</strong>
-      <em>Почему:</em> каждый новый агент — новый LLM-вызов, новый источник расхождений,
-      новое место для JSON-ошибки. Если фича укладывается в существующий агент — кладите туда.</li>
-
-      <li><strong>Монотонные инварианты нельзя обращать вспять.</strong>
-      Поля <code>progress</code>, <code>known_facts</code>, <code>Secret.status</code>,
-      <code>condition=dead</code> — только в одну сторону.
-      <em>Почему:</em> consistency-проверки canon-keeper строятся на этом допущении;
-      нарушение создаёт трудноуловимые расхождения.</li>
-
-      <li><strong>Схема сейва — только с бэксовместимостью.</strong>
-      Новые поля — через <code>Optional[T] = None</code> или default-значения в pydantic.
-      <em>Почему:</em> у пользователя могут быть сейвы, которые он не хочет потерять
-      после <code>git pull</code>.
-      Смотрите <a href="../docs/schema-versioning.md">docs/schema-versioning.md</a>
-      за деталями миграции.</li>
-    </ul>
-  </div>
-</div>
-
-<div class="deepdive">
-  <strong>Хотите больше?</strong> В режиме Разработчик — почему каждый запрет существует
-  и как правильно обходить ограничения при необходимости.
-</div>
+<ol>
+  <li><strong>Issue перед правкой:</strong>
+  <code>gh issue create --repo worldsim-rpg/worldsim-&lt;agent&gt; --title "..."</code></li>
+  <li><strong>Plan first.</strong> Агент → промпты → схема (если нужна) → тесты → порядок шагов.
+  Один агент за раз.</li>
+  <li><strong>После правок:</strong>
+  <code>./repo-setup/sync-all.sh</code> (если менялись схемы) +
+  <code>python -m pytest -q</code> во всех задетых репо.</li>
+  <li><strong>Тест на свежем мире:</strong> <code>worldsim new</code>.</li>
+  <li><strong>PR-поток:</strong> коммит в <code>dev</code> →
+  PR <code>dev → staging</code> (описание + апрув) →
+  PR <code>staging → main</code> для деплоя.</li>
+</ol>
 
 
-<!-- ═══════════════════════════════════════════════
-     6. Поток работы через Claude Code
-═══════════════════════════════════════════════ -->
-<h2>6. Поток работы через Claude Code</h2>
+<h2>7. Как обновиться</h2>
 
-<div class="beginner">
-  <ol>
-    <li><strong>Опишите, что хотите.</strong> Не «исправь файл X», а «хочу, чтобы NPC запоминали ложь игрока».</li>
-    <li>Попросите <em>сначала предложить план</em>. Не сразу писать код.</li>
-    <li>План должен назвать: какой агент, какие промпты, нужна ли схема, какие тесты.</li>
-    <li>Если план затрагивает больше одного агента — насторожитесь. Большинство правок одноагентные.</li>
-    <li>После правки: <code>sync-all.sh</code> (если меняли схемы) + <code>pytest -q</code>.</li>
-    <li>Запустите <code>worldsim new</code>, проверьте на свежем мире.</li>
-  </ol>
-</div>
-
-<div class="dev">
-  <ol>
-    <li><strong>Формулируйте через поведение, не через файлы.</strong>
-    «NPC запоминают ложь и снижают attitude» → Claude сам найдёт, где это реализовать.</li>
-    <li><strong>Plan first.</strong> Явно просите: «предложи план, не пиши код».
-    Хороший план: агент → промпты → схема (если нужна) → тесты → порядок шагов.</li>
-    <li><strong>Один агент за раз.</strong> Если план касается двух агентов — попросите разбить
-    на два отдельных PR. Это упрощает ревью и откат.</li>
-    <li><strong>Issue перед правкой.</strong> Создайте issue в нужном репо:
-    <code>gh issue create --repo worldsim-rpg/worldsim-&lt;agent&gt; --title "..."</code>.
-    Это ваш чекпоинт и история решений.</li>
-    <li><strong>После правки:</strong>
-      <code>./repo-setup/sync-all.sh</code> (если менялись схемы) +
-      <code>python -m pytest -q</code> во всех задетых репо.
-    </li>
-    <li><strong>Тест на свежем мире.</strong> <code>worldsim new</code>, не старый сейв.
-    Старые сейвы могут не иметь новых полей — тест будет нечестным.</li>
-    <li><strong>PR-поток:</strong> коммит в <code>dev</code> →
-    PR <code>dev → staging</code> с описанием изменений →
-    апрув → мерж → PR <code>staging → main</code> для деплоя.</li>
-  </ol>
-</div>
-
-<div class="deepdive">
-  <strong>Хотите больше?</strong> В режиме Разработчик — как создавать issue через CLI,
-  PR-поток dev→staging→main, почему нельзя тестировать на старых сейвах.
-</div>
-
-
-<!-- ═══════════════════════════════════════════════
-     7. Как обновляться
-═══════════════════════════════════════════════ -->
-<h2>7. Как обновляться</h2>
-
-<div class="beginner">
-  <pre><code>cd worldsim/
-for d in worldsim-*; do
-  (cd "$d" && git pull --ff-only)
-done
-
-cd worldsim-workspace
-./repo-setup/sync-all.sh</code></pre>
-  <p>После этого перезапустите тесты. Если что-то упало — смотрите
-  последний <code>git log</code> в workspace.</p>
-</div>
-
-<div class="dev">
-  <pre><code>cd worldsim/
+<pre><code>cd worldsim/
 for d in worldsim-*; do
   (cd "$d" && git fetch && git pull --ff-only origin dev)
 done
 
 cd worldsim-workspace
 ./repo-setup/sync-all.sh
-python -m pytest -q packages/schemas/
 
-# тесты во всех агентах
-for d in ../worldsim-{orchestrator,world-builder,canon-keeper,scene-master,npc-mind,personal-progression}; do
+for d in . ../worldsim-{orchestrator,world-builder,canon-keeper,scene-master,npc-mind,personal-progression}; do
   echo "=== $d ===" && python -m pytest -q "$d"
 done</code></pre>
-  <p><strong>Если упал тест после обновления схем:</strong> скорее всего в агенте есть
-  <code>agent.py</code> который не поддерживает новое обязательное поле.
-  Смотрите последний коммит в workspace: <code>git -C worldsim-workspace log --oneline -5</code>.
-  </p>
-  <p><strong>Совместимость сейвов:</strong> если схема изменилась не по-backward-compatible,
-  старые сейвы не загрузятся. Проверьте
-  <a href="../docs/schema-versioning.md">docs/schema-versioning.md</a> —
-  там описан процесс миграции через <code>migrate_save()</code>.</p>
-</div>
 
-<div class="deepdive">
-  <strong>Хотите больше?</strong> В режиме Разработчик — как запустить тесты во всех
-  агентах разом, что делать с несовместимыми сейвами после обновления схем.
-</div>
+<p>Тест упал после обновления схем → скорее всего агент не поддерживает
+новое обязательное поле. Смотрите:
+<code>git -C worldsim-workspace log --oneline -5</code>.</p>
+<p>Несовместимые сейвы →
+<a href="../docs/schema-versioning.md">docs/schema-versioning.md</a> —
+процесс миграции через <code>migrate_save()</code>.</p>
 
 
-<!-- ═══════════════════════════════════════════════
-     8. Что читать дальше
-═══════════════════════════════════════════════ -->
 <h2>8. Что читать дальше</h2>
 
-<div class="beginner">
-  <ul>
-    <li><a href="architecture-guide.html">architecture-guide.html</a> — полная архитектура системы.</li>
-    <li><a href="skills-guide.html">skills-guide.html</a> — как устроена прогрессия игрока.</li>
-    <li><a href="../docs/loop.md">docs/loop.md</a> — 13 шагов хода (для понимания потока).</li>
-  </ul>
-  <p class="muted">Когда освоитесь — переключитесь в режим Разработчик и посмотрите
-  полный список технических документов.</p>
+<ul>
+  <li><a href="architecture-guide.html">architecture-guide.html</a> — полная архитектура.</li>
+  <li><a href="skills-guide.html">skills-guide.html</a> — прогрессия игрока.</li>
+  <li><a href="../docs/loop.md">docs/loop.md</a> — 13 шагов хода.</li>
+  <li><a href="../docs/canon-model.md">docs/canon-model.md</a> — как канон лежит на диске.</li>
+  <li><a href="../docs/constraints.md">docs/constraints.md</a> — hard vs soft.</li>
+  <li><a href="../docs/agent-map.md">docs/agent-map.md</a> — кто что пишет в канон.</li>
+  <li><a href="../docs/schema-versioning.md">docs/schema-versioning.md</a> — версионирование сейвов.</li>
+  <li><a href="../docs/agent-contract.md">docs/agent-contract.md</a> — интерфейс агентов.</li>
+  <li><a href="../CLAUDE.md">CLAUDE.md</a> — правила для Claude Code в workspace.</li>
+</ul>
+
+<div class="ok">
+  Дошли до конца — достаточно контекста, чтобы менять систему не разнося её. Удачи.
 </div>
 
-<div class="dev">
-  <ul>
-    <li><a href="architecture-guide.html">architecture-guide.html</a> — полная архитектура.</li>
-    <li><a href="skills-guide.html">skills-guide.html</a> — прогрессия игрока.</li>
-    <li><a href="../docs/loop.md">docs/loop.md</a> — 13 шагов хода, подробно.</li>
-    <li><a href="../docs/canon-model.md">docs/canon-model.md</a> — как канон лежит на диске.</li>
-    <li><a href="../docs/constraints.md">docs/constraints.md</a> — hard vs soft, таксономия.</li>
-    <li><a href="../docs/agent-map.md">docs/agent-map.md</a> — кто что пишет в канон.</li>
-    <li><a href="../docs/schema-versioning.md">docs/schema-versioning.md</a> — версионирование и миграция сейвов.</li>
-    <li><a href="../docs/agent-contract.md">docs/agent-contract.md</a> — интерфейс каждого агента.</li>
-    <li><a href="../CLAUDE.md">CLAUDE.md</a> (workspace) — правила для Claude Code.</li>
-  </ul>
-</div>
+</div><!-- /panel.dev -->
 
-<div class="deepdive">
-  <strong>Хотите больше?</strong> В режиме Разработчик — полный список технических документов:
-  canon-model, constraints, agent-contract, schema-versioning.
-</div>
-
-<div class="ok beginner">
-  Усвоили базу — <span class="toggle-link" onclick="setLevelByLink('dev')" style="color:var(--accent);cursor:pointer;text-decoration:underline dotted">переключитесь в режим Разработчик</span> и посмотрите, что стоит за каждым пунктом.
-</div>
-<div class="ok dev">
-  Если дошли до конца — у вас достаточно контекста, чтобы через Claude Code делать правки, не разнося систему. Удачи.
-</div>
 
 <script>
   function setLevel(level, btn) {
     document.body.className = 'level-' + level;
     document.querySelectorAll('.level-toggle button').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
-    localStorage.setItem('worldsim-dev-guide-level', level);
+    localStorage.setItem('worldsim-guide-level', level);
   }
-
-  function setLevelByLink(level) {
-    const buttons = document.querySelectorAll('.level-toggle button');
-    const btn = level === 'beginner' ? buttons[0] : buttons[1];
-    setLevel(level, btn);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  // restore saved level
-  const saved = localStorage.getItem('worldsim-dev-guide-level');
-  if (saved === 'dev') {
-    setLevel('dev', document.querySelectorAll('.level-toggle button')[1]);
-  }
+  const saved = localStorage.getItem('worldsim-guide-level');
+  if (saved === 'dev') setLevel('dev', document.querySelectorAll('.level-toggle button')[1]);
 </script>
 
 </body>
