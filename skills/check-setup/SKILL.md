@@ -144,8 +144,22 @@ cp repos/worldsim-orchestrator/.env.example repos/worldsim-orchestrator/.env
 ⚠ если старше 7 дней или файл отсутствует
 
 **Скиллы**  
-Найти папку skills Claude Code и проверить наличие:
+Найти папку skills Claude Code. Для каждого из 6 скиллов:
 `github-sync`, `schema-sync`, `scaffold-agent`, `check-setup`, `ws-status`, `run-tests`
+
+1. Проверить что `<claude-skills>/<name>/SKILL.md` существует.
+2. Сравнить дату модификации с `<sandbox>/repos/worldsim-workspace/skills/<name>/SKILL.md`:
+
+```bash
+# installed version
+stat -c %Y "<claude-skills>/<name>/SKILL.md" 2>/dev/null     # Linux
+stat -f %m "<claude-skills>/<name>/SKILL.md" 2>/dev/null     # macOS
+(Get-Item "<claude-skills>/<name>/SKILL.md").LastWriteTimeUtc  # Windows/PowerShell
+```
+
+Если workspace-версия новее → помечай как `⚠ outdated`.  
+Если файл отсутствует → `✗ not installed`.  
+Если версии совпадают или установленная новее → `✓`.
 
 **CLI инструменты**  
 `git --version`, `python --version`, `gh --version`
@@ -178,7 +192,10 @@ WORLDSIM SETUP CHECK
   ⚠ worldsim-npc-mind — устарело (2026-03-01)
 
  Скиллы
-  ✓ все 6 установлены
+  ✓ github-sync        (актуален)
+  ✓ schema-sync        (актуален)
+  ⚠ ws-status          (устарел — запусти: bash skills/install.sh)
+  ✗ run-tests          (не установлен)
 
  CLI
   ✓ git 2.44  ✓ python 3.12  ✗ gh не найден
