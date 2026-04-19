@@ -75,4 +75,4 @@ End with a one-line summary: how many repos were updated, and whether anything n
 - **Uncommitted changes (dirty worktree)**: `--autostash` handles this for pull. For push, note that dirty repos exist but don't block the push of committed changes.
 - **Repo doesn't exist locally**: skip with a warning — user may not have cloned all repos yet.
 - **No remote configured**: report as a warning, skip.
-- **Not on main**: note the current branch name so the user isn't surprised.
+- **Branch context**: repos normally sit on `dev`. If a repo is on `staging` or `main`, note it — direct push to those is blocked by branch protection; only PRs can update them.

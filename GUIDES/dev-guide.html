@@ -53,17 +53,21 @@ Claude Code добавлять фичи в игру без того, чтобы 
 
 <pre><code>mkdir worldsim
 cd worldsim
-git clone https://github.com/worldsim-rpg/worldsim-workspace
-git clone https://github.com/worldsim-rpg/worldsim-orchestrator
-git clone https://github.com/worldsim-rpg/worldsim-world-builder
-git clone https://github.com/worldsim-rpg/worldsim-canon-keeper
-git clone https://github.com/worldsim-rpg/worldsim-scene-master
-git clone https://github.com/worldsim-rpg/worldsim-npc-mind
-git clone https://github.com/worldsim-rpg/worldsim-personal-progression
+for r in worldsim-workspace worldsim-orchestrator worldsim-world-builder \
+         worldsim-canon-keeper worldsim-scene-master worldsim-npc-mind \
+         worldsim-personal-progression; do
+  git clone "https://github.com/worldsim-rpg/$r.git"
+  git -C "$r" checkout dev
+done
 </code></pre>
 
 <p>Все семь должны лежать <strong>на одном уровне</strong> —
 sync-скрипт ищет их как соседние папки.</p>
+
+<p><strong>Три ветки в каждом репо:</strong> <code>dev</code> (разработка) →
+<code>staging</code> (ревью) → <code>main</code> (деплой). Разработчик
+работает в <code>dev</code>. Прямой push в <code>staging</code> и
+<code>main</code> заблокирован — только через PR с апрувом.</p>
 
 <h3>1.2. Python 3.11+, venv</h3>
 

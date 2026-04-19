@@ -1,23 +1,25 @@
 # Стратегия веток
 
-На MVP-фазе — максимально просто.
+Три постоянные ветки в каждом из 7 репо. Прямой push в `staging` и `main`
+заблокирован branch protection rules на GitHub.
 
 ## Ветки
 
-- **`main`** — default, сюда идут все изменения. CI (когда появится)
-  гоняет тесты.
-- **`release`** — появится позже, когда будет публичный релиз. Пока не
-  используем.
+| Ветка     | Назначение           | Кто пишет               | Защита                        |
+|-----------|----------------------|-------------------------|-------------------------------|
+| `dev`     | активная разработка  | разработчик, прямой push | —                             |
+| `staging` | синхронизация/ревью  | PR из `dev`             | 1 approve обязателен          |
+| `main`    | деплой/продакшен     | PR из `staging`         | 1 approve обязателен          |
 
 ## Как вносить изменения
 
-1. Клонируйте нужный репо (или работайте в `sandbox/repos/<agent>/`).
-2. Создайте ветку от `main`: `git checkout -b feature/<короткое-имя>`.
-3. Коммитьте атомарно, конвенциональными сообщениями:
+1. Убедитесь, что вы на `dev`: `git checkout dev && git pull`.
+2. Коммитьте атомарно, конвенциональными сообщениями:
    `feat:`, `fix:`, `docs:`, `refactor:`, `test:`.
-4. Пушьте: `git push -u origin feature/<name>`.
-5. Откройте PR в `main`. Опишите **что** и **зачем**.
-6. Merge после ревью (или самоmerge на текущей фазе).
+3. Пушьте: `git push` (или `git push -u origin dev` при первом пуше).
+4. Откройте PR `dev → staging`. Опишите **что** и **зачем**.
+5. Ревьюер апрувит и мержит в `staging`.
+6. Ревьюер открывает PR `staging → main` и мержит для деплоя.
 
 ## Что считается "сломанным" main
 
@@ -30,17 +32,24 @@
 ## Workflow после изменений в схемах
 
 ```bash
-# 1. Правите packages/schemas/src/worldsim_schemas/schemas.py в workspace
-# 2. Бампните версию в packages/schemas/pyproject.toml (0.1.0 → 0.1.1)
-# 3. Запустите sync
+# 1. Работаете в dev
+git checkout dev
+
+# 2. Правите packages/schemas/src/worldsim_schemas/schemas.py в workspace
+# 3. Бампните версию в packages/schemas/pyproject.toml (0.1.0 → 0.1.1)
+# 4. Запустите sync
 cd repos/worldsim-workspace
 ./repo-setup/sync-all.sh
-# 4. Пройдитесь по агентам — там _schemas/ обновились, протестируйте
+
+# 5. Пройдитесь по агентам — там _schemas/ обновились, протестируйте
 for r in ../worldsim-orchestrator ../worldsim-world-builder ../worldsim-canon-keeper \
          ../worldsim-scene-master ../worldsim-npc-mind ../worldsim-personal-progression; do
   (cd "$r" && python -m pytest -q)
 done
-# 5. Коммитьте изменения в workspace и агентах отдельными PR
+
+# 6. Коммитьте в dev и пушьте
+# 7. PR dev → staging в каждом затронутом репо
+# 8. После ревью — PR staging → main
 ```
 
 ## Разделение ответственности

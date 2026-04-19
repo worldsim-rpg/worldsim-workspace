@@ -45,13 +45,13 @@ WORLDSIM WORKSPACE STATUS
 ──────────────────────────────────────────────────────────────
 Repo                          Branch    Ahead  Behind  Dirty
 ──────────────────────────────────────────────────────────────
-worldsim-workspace            main        0       0      —
-worldsim-orchestrator         main        2       0      3 files
-worldsim-world-builder        main        0       1      —
-worldsim-canon-keeper         feat/npc    0       0      1 file
-worldsim-scene-master         main        0       0      —
-worldsim-npc-mind             main        0       0      —
-worldsim-personal-progression main        0       0      —
+worldsim-workspace            dev         0       0      —
+worldsim-orchestrator         dev         2       0      3 files
+worldsim-world-builder        dev         0       1      —
+worldsim-canon-keeper         dev         0       0      1 file
+worldsim-scene-master         dev         0       0      —
+worldsim-npc-mind             dev         0       0      —
+worldsim-personal-progression dev         0       0      —
 ──────────────────────────────────────────────────────────────
 ```
 
