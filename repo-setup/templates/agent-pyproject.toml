@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "{{PKG_NAME_HYPHEN}}"
+version = "0.1.0"
+description = "{{ONE_LINE_DESCRIPTION}}"
+requires-python = ">=3.11"
+dependencies = [
+  "anthropic>=0.40.0",
+  "pydantic>=2.6.0",
+  "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

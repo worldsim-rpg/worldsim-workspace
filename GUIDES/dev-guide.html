@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>worldsim — руководство разработчика</title>
+<style>
+  :root { --bg:#0d1117; --fg:#e6edf3; --muted:#8b949e; --accent:#58a6ff; --warn:#f0883e; --ok:#3fb950; --soft:#21262d; --code:#161b22; }
+  body { background:var(--bg); color:var(--fg); font:16px/1.65 -apple-system, Segoe UI, sans-serif; max-width:880px; margin:0 auto; padding:32px 20px 80px; }
+  h1, h2, h3 { color:var(--fg); margin-top:1.8em; }
+  h1 { border-bottom:1px solid var(--soft); padding-bottom:12px; }
+  h2 { border-bottom:1px solid var(--soft); padding-bottom:6px; }
+  a { color:var(--accent); }
+  code { background:var(--code); padding:2px 6px; border-radius:4px; font-size:0.92em; }
+  pre { background:var(--code); padding:14px 16px; border-radius:8px; overflow-x:auto; font-size:0.9em; }
+  pre code { background:none; padding:0; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; }
+  th, td { border:1px solid var(--soft); padding:8px 12px; text-align:left; vertical-align:top; }
+  th { background:var(--code); }
+  .muted { color:var(--muted); }
+  .box { background:var(--code); border-left:3px solid var(--accent); padding:12px 16px; border-radius:4px; margin:14px 0; }
+  .warn { background:var(--code); border-left:3px solid var(--warn); padding:12px 16px; border-radius:4px; margin:14px 0; }
+  .ok   { background:var(--code); border-left:3px solid var(--ok); padding:12px 16px; border-radius:4px; margin:14px 0; }
+  kbd { background:var(--soft); padding:2px 6px; border-radius:4px; font-size:0.85em; border:1px solid #444; }
+</style>
+</head>
+<body>
+
+<h1>worldsim — руководство разработчика</h1>
+
+<p class="muted">Для тех, кто не пишет код руками, но хочет через
+Claude Code добавлять фичи в игру без того, чтобы всё разнести.
+Читать сверху вниз. Длина — ~20 минут.</p>
+
+<h2>0. За 2 минуты: как это устроено</h2>
+
+<p>Игра <code>worldsim</code> — 7 независимых git-репо. Один из них —
+<code>worldsim-workspace</code> — это <em>ваша рабочая папка</em> с
+документацией и общими пакетами. Остальные шесть — отдельные агенты
+(мозги игры): оркестратор, мир-движок, хранитель канона, рассказчик,
+диалог-NPC, прогрессия игрока.</p>
+
+<p>Агенты общаются между собой не по сети, а как обычные pip-пакеты
+внутри одного процесса. Это максимально просто: у вас не будет ни
+контейнеров, ни MCP, ни очередей.</p>
+
+<div class="box"><strong>Архитектура целиком —
+<a href="architecture-guide.html">architecture-guide.html</a>.</strong>
+Сначала прочитайте её, потом возвращайтесь сюда.</div>
+
+<h2>1. Первый запуск</h2>
+
+<h3>1.1. Клонируйте 7 репо рядом</h3>
+
+<pre><code>mkdir worldsim
+cd worldsim
+git clone https://github.com/b3axap/worldsim-workspace
+git clone https://github.com/b3axap/worldsim-orchestrator
+git clone https://github.com/b3axap/worldsim-world-builder
+git clone https://github.com/b3axap/worldsim-canon-keeper
+git clone https://github.com/b3axap/worldsim-scene-master
+git clone https://github.com/b3axap/worldsim-npc-mind
+git clone https://github.com/b3axap/worldsim-personal-progression
+</code></pre>
+
+<p>Все семь должны лежать <strong>на одном уровне</strong> —
+sync-скрипт ищет их как соседние папки.</p>
+
+<h3>1.2. Python 3.11+, venv</h3>
+
+<pre><code>cd worldsim-workspace
+python -m venv .venv
+# Windows:
+.venv\Scripts\activate
+# macOS/Linux:
+source .venv/bin/activate
+</code></pre>
+
+<h3>1.3. Установка</h3>
+
+<pre><code># общие пакеты
+pip install -e packages/schemas
+pip install -e packages/prompts
+
+# агенты
+pip install -e ../worldsim-world-builder
+pip install -e ../worldsim-canon-keeper
+pip install -e ../worldsim-scene-master
+pip install -e ../worldsim-npc-mind
+pip install -e ../worldsim-personal-progression
+
+# оркестратор — последним (он ставит typer, rich, anthropic и подтягивает всех)
+pip install -e ../worldsim-orchestrator
+</code></pre>
+
+<h3>1.4. API-ключ</h3>
+
+<pre><code>cp ../worldsim-orchestrator/.env.example ../worldsim-orchestrator/.env
+# отредактируйте .env — впишите ANTHROPIC_API_KEY
+</code></pre>
+
+<h3>1.5. Запуск</h3>
+
+<pre><code>worldsim new                    # создать новый мир (интерактивно)
+worldsim play --world &lt;id&gt;      # играть в выбранный мир
+worldsim worlds                 # список миров
+</code></pre>
+
+<h2>2. Куда вы смотрите, когда что-то не работает</h2>
+
+<table>
+  <tr><th>Симптом</th><th>Куда идти</th></tr>
+  <tr><td>Игра не стартует, ImportError</td><td>Не все 6 агентов + 2 пакета установлены через <code>pip install -e</code>. Проверьте активный venv.</td></tr>
+  <tr><td>"ANTHROPIC_API_KEY not set"</td><td><code>worldsim-orchestrator/.env</code> не создан или не подхватился.</td></tr>
+  <tr><td>Игра повторяет "не могу, потому что X"</td><td>Hard-validator срабатывает. Логика — <code>worldsim-orchestrator/src/worldsim_orchestrator/validators.py</code>.</td></tr>
+  <tr><td>NPC знает то, чего знать не должен</td><td>Проблема в <code>worldsim-npc-mind/prompts/dialog.md</code> или в том, что его <code>knowledge</code> при init заполнен слишком щедро.</td></tr>
+  <tr><td>Сцены сухие / слишком длинные</td><td><code>worldsim-scene-master/prompts/render.md</code>.</td></tr>
+  <tr><td>Игрок бесконечно качает скилл</td><td>Пороги в <code>worldsim-personal-progression/prompts/progression.md</code>.</td></tr>
+  <tr><td>LLM возвращает мусор, падает JSON-парс</td><td>Смотрите <code>WORLDSIM_DEBUG=1</code>: в stderr будет raw-выход модели.</td></tr>
+</table>
+
+<h2>3. Железное правило: где править</h2>
+
+<div class="warn">
+<strong>90% изменений — это правка markdown-промптов, а не Python.</strong>
+Если ваш Claude Code хочет залезть в <code>.py</code> файл,
+первый вопрос — <em>точно ли это не промпт?</em>
+</div>
+
+<p>Код в <code>src/.../agent.py</code> у каждого агента — это тонкий клей:
+&ldquo;возьми input, подставь в промпт, спарси JSON&rdquo;.
+Поведение живёт в <code>prompts/*.md</code>.</p>
+
+<h2>4. Как добавить фичу, не сломав всё</h2>
+
+<h3>4.1. Определите, в чью зону попадает изменение</h3>
+
+<p>Откройте <code>docs/agent-map.md</code>. Там таблица: кто что пишет
+в канон. Ваша фича должна <strong>полностью</strong> лежать в одной
+зоне. Если тянет в несколько — разделите на части.</p>
+
+<h3>4.2. Проверьте, не задевает ли это <em>канон</em> (схемы)</h3>
+
+<p>Если нужно <strong>новое поле в сущности</strong> (например, у
+<code>Character</code> появляется <code>mood</code>):</p>
+
+<ol>
+  <li>Правка в <code>worldsim-workspace/packages/schemas/src/worldsim_schemas/schemas.py</code>.</li>
+  <li>Запустите <code>python -m pytest -q</code> в <code>packages/schemas/</code>.</li>
+  <li><code>./repo-setup/sync-all.sh</code> — это разольёт новые схемы во все агент-репо как <code>_schemas/</code>.</li>
+  <li>В каждом репо, где agent.py читает/пишет это поле — добавьте поддержку.</li>
+  <li>Промпт, который теперь должен <em>генерировать</em> это поле — правка <code>prompts/*.md</code>.</li>
+</ol>
+
+<div class="warn">
+<strong>Никогда не правьте <code>_schemas/</code> внутри агент-репо руками.</strong>
+Это снимок. Меняется только в workspace и раскатывается sync-скриптом.
+</div>
+
+<h3>4.3. Новая hard-constraint</h3>
+
+<p>Живут в <code>worldsim-orchestrator/src/worldsim_orchestrator/validators.py</code>.
+Каждая — маленькая функция, возвращает <code>ConstraintResult(ok, code, message)</code>.
+Добавьте вызов в <code>validate_intent</code>.</p>
+
+<p>Тесты — обязательно, в <code>worldsim-orchestrator/tests/test_validators.py</code>.
+Пример на каждый позитив и каждый негатив.</p>
+
+<h3>4.4. Новая soft-характеристика / новое поведение NPC</h3>
+
+<p>Это чисто промпты. Не пишите код.</p>
+
+<ol>
+  <li>Найдите промпт, который это генерирует (обычно <code>world_init.md</code> или <code>turn_update.md</code>).</li>
+  <li>Добавьте в него раздел &ldquo;Правила&rdquo; с новым пунктом.</li>
+  <li>Если поле новое — пункт 4.2 выше.</li>
+  <li>Запустите игру, создайте новый мир, посмотрите, как получается.</li>
+</ol>
+
+<h2>5. Что запрещено</h2>
+
+<div class="warn">
+  <ul>
+    <li><strong>Один файл канона — один писатель.</strong> Если вам
+        кажется, что world-builder должен записать что-то в
+        <code>player_progression</code> — это всегда ошибка.
+        Добавьте патч в зоне <code>personal-progression</code>.</li>
+    <li><strong>Не увеличивайте количество агентов без веской причины.</strong>
+        Сейчас их 6. Каждый новый — это новый сетевой контакт, новый
+        источник расхождений. Если фича укладывается в существующий
+        агент — кладите туда.</li>
+    <li><strong>Не ломайте monотонность инвариантов.</strong>
+        progress, known_facts, Secret.status, condition=dead —
+        только в одну сторону. Это поддерживает consistency-проверки.</li>
+    <li><strong>Не меняйте схему сейва без бэк-совместимости.</strong>
+        Если у пользователя есть сохранения — они не должны умирать
+        после <code>git pull</code>.</li>
+  </ul>
+</div>
+
+<h2>6. Поток работы через Claude Code</h2>
+
+<p>Простой ритм для non-coder:</p>
+
+<ol>
+  <li><strong>Сначала опишите Claude, что хотите.</strong> Не
+      &ldquo;исправь такой-то файл&rdquo;, а &ldquo;хочу, чтобы NPC
+      запоминали, когда игрок им врёт, и снижали attitude в повторных встречах&rdquo;.</li>
+  <li>Попросите <em>сначала предложить план</em>. Не сразу писать код.</li>
+  <li>План должен упомянуть: какой агент задействован, какие промпты
+      правятся, нужна ли правка схем, какие тесты добавляются.</li>
+  <li>Если план касается больше одного агента — насторожитесь.
+      Большинство корректных правок — одно-агентные.</li>
+  <li>Сохраните план как issue в нужном репо, потом правьте.</li>
+  <li>После правки — <code>sync-all.sh</code> (если меняли схемы),
+      <code>python -m pytest -q</code> во всех задетых репо.</li>
+  <li>Запустите игру, создайте <em>новый</em> мир (не старый сейв!),
+      проверьте вживую.</li>
+</ol>
+
+<h2>7. Как безопасно обновляться</h2>
+
+<pre><code># в корне worldsim/
+for d in worldsim-*; do
+  (cd "$d" && git pull --ff-only)
+done
+
+# если менялась схема — workspace раскатит свежие _schemas/_prompts
+cd worldsim-workspace
+./repo-setup/sync-all.sh
+</code></pre>
+
+<p>После этого перезапустите тесты. Если что-то упало — смотрите
+последний <code>git log</code> в workspace, там обычно причина.</p>
+
+<h2>8. Что читать дальше</h2>
+
+<ul>
+  <li><a href="architecture-guide.html">architecture-guide.html</a> — полная архитектура.</li>
+  <li><a href="../CLAUDE.md">CLAUDE.md</a> (workspace) — правила для Claude Code в этом репо.</li>
+  <li><a href="../docs/loop.md">docs/loop.md</a> — 13 шагов хода.</li>
+  <li><a href="../docs/canon-model.md">docs/canon-model.md</a> — как канон лежит на диске.</li>
+  <li><a href="../docs/constraints.md">docs/constraints.md</a> — hard vs soft.</li>
+</ul>
+
+<div class="ok">
+Если вы дошли до конца — у вас достаточно контекста,
+чтобы через Claude Code делать правки, не разнося систему.
+Удачи.
+</div>
+
+</body>
+</html>

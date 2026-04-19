@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>worldsim — архитектура</title>
+<style>
+  :root { --bg:#0d1117; --fg:#e6edf3; --muted:#8b949e; --accent:#58a6ff; --soft:#21262d; --code:#161b22; }
+  body { background:var(--bg); color:var(--fg); font:16px/1.6 -apple-system, Segoe UI, sans-serif; max-width:880px; margin:0 auto; padding:32px 20px 80px; }
+  h1, h2, h3 { color:var(--fg); margin-top:1.8em; }
+  h1 { border-bottom:1px solid var(--soft); padding-bottom:12px; }
+  h2 { border-bottom:1px solid var(--soft); padding-bottom:6px; }
+  a { color:var(--accent); }
+  code { background:var(--code); padding:2px 6px; border-radius:4px; font-size:0.92em; }
+  pre { background:var(--code); padding:14px 16px; border-radius:8px; overflow-x:auto; font-size:0.9em; }
+  pre code { background:none; padding:0; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; }
+  th, td { border:1px solid var(--soft); padding:8px 12px; text-align:left; vertical-align:top; }
+  th { background:var(--code); }
+  .muted { color:var(--muted); }
+  .box { background:var(--code); border-left:3px solid var(--accent); padding:12px 16px; border-radius:4px; margin:14px 0; }
+  ul, ol { padding-left:1.4em; }
+  .diagram { font-family:Consolas, monospace; white-space:pre; background:var(--code); padding:16px; border-radius:8px; overflow-x:auto; font-size:13px; line-height:1.35; }
+</style>
+</head>
+<body>
+
+<h1>worldsim — архитектура MVP</h1>
+
+<p class="muted">Текстовая RPG с миром, который генерируется LLM по ходу игры.
+Канон хранится на диске, между сессиями не теряется.
+MVP-контур: ролевая игра + исследование (без боёвки).</p>
+
+<h2>Цель</h2>
+<ul>
+  <li>Игрок играет в терминале на русском, общается свободным текстом.</li>
+  <li>Мир <em>живёт</em>: NPC помнят разговоры, фракции реагируют на
+      репутацию, секреты постепенно раскрываются.</li>
+  <li><strong>Hard-ограничения</strong> (не телепортируешься, не
+      используешь предметы, которых нет) проверяются детерминированно.</li>
+  <li><strong>Soft-ограничения</strong> (тон, драматургия, настроение NPC)
+      ведёт LLM.</li>
+</ul>
+
+<h2>7 репозиториев</h2>
+
+<table>
+  <tr><th>Репо</th><th>Роль</th><th>Что пишет в канон</th></tr>
+  <tr><td><code>worldsim-workspace</code></td><td>Локальный корень: общие пакеты <code>schemas</code>, <code>prompts</code>, документы, sync-скрипты. Не публикуется как pypi.</td><td>—</td></tr>
+  <tr><td><code>worldsim-orchestrator</code></td><td>CLI игры. Общается с игроком, нормализует ввод в <code>Intent</code>, валидирует hard-constraints, оркеструет всех агентов.</td><td>settings, timeline, session_log</td></tr>
+  <tr><td><code>worldsim-world-builder</code></td><td>Мир-движок. Генерирует исходный мир, раскрывает локации лениво, обновляет канон после каждого хода.</td><td>locations, characters (NPC), factions, secrets, arcs, plot_state, world_meta</td></tr>
+  <tr><td><code>worldsim-canon-keeper</code></td><td>Валидатор целостности: ссылки, граф локаций, монотонность арок, недопустимые патчи. Детерм. + LLM-проверка.</td><td>—</td></tr>
+  <tr><td><code>worldsim-scene-master</code></td><td>Рендерер сцены игроку. Применяет эпистемический фильтр.</td><td>—</td></tr>
+  <tr><td><code>worldsim-npc-mind</code></td><td>Диалог конкретного NPC, ограниченный его knowledge.</td><td>— (возвращает attitude_delta и revealed_facts)</td></tr>
+  <tr><td><code>worldsim-personal-progression</code></td><td>Прогрессия игрока: атрибуты, навыки, репутация, инвентарь, condition.</td><td>player_progression</td></tr>
+</table>
+
+<h2>Схема на одном экране</h2>
+
+<div class="diagram">
+                ┌──────────────────────────┐
+                │     ИГРОК (терминал)     │
+                └─────────────┬────────────┘
+                              │ свободный текст
+                 ┌────────────▼───────────┐
+                 │  worldsim-orchestrator │
+                 │  (cli, loop, valids)   │
+                 └────┬────────────┬──────┘
+                      │ intent     │ context
+     ┌────────────────┘            │
+     │  (если диалог)              │
+     │                             │
+ ┌───▼──────────┐      ┌──────────▼────────────┐
+ │ npc-mind     │─────►│    world-builder      │
+ │ (per-NPC)    │      │  run_turn_update      │
+ └──────────────┘      └──────────┬────────────┘
+                                  │ TurnPatch (мир)
+                     ┌────────────▼──────────┐
+                     │ personal-progression  │
+                     │  (patch на игрока)    │
+                     └────────────┬──────────┘
+                                  │ merged patches
+                     ┌────────────▼──────────┐
+                     │    canon-keeper       │
+                     │  (инварианты + LLM)   │
+                     └────────────┬──────────┘
+                                  │ ok
+                     ┌────────────▼──────────┐
+                     │ persistence.apply     │
+                     │  + timeline append    │
+                     └────────────┬──────────┘
+                                  │
+                     ┌────────────▼──────────┐
+                     │    scene-master       │
+                     │  (рендер для игрока)  │
+                     └────────────┬──────────┘
+                                  │ текст
+                     ◄─────────────┘
+</div>
+
+<h2>Цикл хода (13 шагов)</h2>
+
+<ol>
+  <li><code>build_turn_context(snapshot)</code> — вырезаем из канона только то, что нужно (текущая локация, соседи, 5 ближайших NPC, активные арки, недавние события timeline).</li>
+  <li><code>parse_intent(player_input)</code> — LLM нормализует свободный текст в <code>Intent</code>.</li>
+  <li><code>validate_intent</code> — Python-проверки: target существует, предмет в инвентаре, локации связаны, condition позволяет.</li>
+  <li>Если intent = <code>converse</code> и есть целевой NPC → <code>npc-mind.run</code>.</li>
+  <li><code>world-builder.run_turn_update</code> — патч мира, narrative_summary.</li>
+  <li><code>personal-progression.run</code> — патч игрока.</li>
+  <li><code>canon-keeper.validate(mode="patch")</code>. Если не <code>ok</code> — блокируем, откатываемся.</li>
+  <li><code>apply_turn</code> — сохраняем патчи + new_facts + timeline_event.</li>
+  <li><code>save_world</code> — дамп на диск.</li>
+  <li><code>scene-master.run</code> — рендер игроку.</li>
+  <li><code>append_session_log</code>.</li>
+  <li>Вывод в терминал.</li>
+  <li>Ждём следующего ввода.</li>
+</ol>
+
+<h2>Канон — четыре слоя правды</h2>
+
+<ul>
+  <li><strong>Онтологический</strong> — что <em>есть</em> в мире (locations, characters, factions, secrets).</li>
+  <li><strong>Эпистемический</strong> — кто что <em>знает</em> (<code>Character.knowledge</code>, <code>Secret.known_by</code>, <code>PlayerProgression.known_facts</code>).</li>
+  <li><strong>Нарративный</strong> — что <em>произошло</em> (<code>timeline.jsonl</code>, <code>session_log.jsonl</code>).</li>
+  <li><strong>Игрок-facing</strong> — что игрок <em>видит</em> (рендер scene-master с эпистемическим фильтром).</li>
+</ul>
+
+<h2>Файлы сейва</h2>
+
+<pre><code>saves/
+  &lt;world_id&gt;/
+    meta.json               # WorldMeta
+    settings.json           # GameSettings
+    locations.json          # {id: Location}
+    characters.json         # {id: Character} — NPC и игрок
+    factions.json           # {id: Faction}
+    secrets.json            # {id: Secret}
+    arcs.json               # {id: Arc}
+    plot_state.json         # PlotState
+    player_progression.json # PlayerProgression
+    timeline.jsonl          # append-only, по событию в строке
+    session_log.jsonl       # append-only: {intent, narrative, rendered_text}
+</code></pre>
+
+<h2>Зоны ответственности (кто что пишет)</h2>
+
+<p>Главный принцип: <strong>у каждого файла есть ровно один писатель</strong>.
+Никаких гонок.</p>
+
+<ul>
+  <li><code>locations / characters[NPC] / factions / secrets / arcs / plot_state</code>: world-builder.</li>
+  <li><code>player_progression</code>: personal-progression.</li>
+  <li><code>characters[player]</code> (основные поля): world-builder при init; потом не меняется (атрибуты/скиллы живут в <code>player_progression</code>).</li>
+  <li><code>timeline</code>: orchestrator аппендит (из <code>TurnPatch.timeline_event</code>).</li>
+  <li><code>settings</code>: orchestrator (через CLI).</li>
+  <li><code>session_log</code>: orchestrator.</li>
+</ul>
+
+<h2>Hard vs soft constraints</h2>
+
+<p><strong>Hard</strong> (Python, deterministic, всегда):</p>
+<ul>
+  <li>target должен существовать в канон</li>
+  <li>предмет для действия — в <code>inventory</code></li>
+  <li>локация-цель — связана с текущей (<code>Location.connections</code>)</li>
+  <li>NPC, к которому обращаются, — в той же или соседней локации</li>
+  <li>знание факта — проверяется по <code>Character.knowledge</code> / <code>player_progression.known_facts</code></li>
+  <li>condition <code>dead</code> / <code>exhausted</code> блокирует risk_level high</li>
+</ul>
+
+<p><strong>Soft</strong> (LLM, pydantic-клампы на диапазоны):</p>
+<ul>
+  <li>attitude_to_player ∈ [−1, 1]</li>
+  <li>dramatic_pressure ∈ [0, 1]</li>
+  <li>attributes.* ∈ [0, 1]</li>
+  <li>reputation[faction] ∈ [−1, 1]</li>
+  <li>Arc.progress ∈ [0, 1], монотонно вверх (кроме <code>reversal</code>)</li>
+  <li>Secret.status ∈ {hidden, hinted, revealed} — только вверх</li>
+</ul>
+
+<h2>Монотонные инварианты</h2>
+
+<ul>
+  <li><code>Arc.progress</code>, <code>Arc.clarity_to_player</code> — только вверх (кроме stage=<code>reversal</code>).</li>
+  <li><code>Secret.status</code>: hidden → hinted → revealed, без откатов.</li>
+  <li><code>known_facts</code>: только добавление; забывание — через явное событие (в MVP запрещено).</li>
+  <li><code>condition: dead</code> — финально. Воскрешения запрещены.</li>
+</ul>
+
+<div class="box">
+  <strong>Упражнение:</strong> прочитайте <a href="../docs/constraints.md">docs/constraints.md</a>,
+  потом код <code>worldsim-canon-keeper/src/worldsim_canon_keeper/agent.py</code> — увидите все эти правила как Python.
+</div>
+
+<h2>Ленивая генерация</h2>
+
+<p>При <code>world_init</code> мы создаём только <em>минимум</em>:
+1 поселение, 4–6 локаций, 2–3 фракции, 5–8 NPC, 2–3 секрета, 1–2 арки.
+<code>full_description</code> у локаций — <code>null</code>.</p>
+
+<p>Когда игрок <em>впервые</em> заходит в локацию с <code>full_description=null</code>,
+orchestrator вызывает <code>world-builder.run_location_detail</code>, сохраняет
+результат в канон. Это — единственное место, где канон расширяется
+между ходами.</p>
+
+<h2>Токен-бюджет хода</h2>
+
+<table>
+  <tr><th>Шаг</th><th>Модель</th><th>~output tokens</th></tr>
+  <tr><td>parse_intent</td><td>Haiku</td><td>150</td></tr>
+  <tr><td>npc-mind (если диалог)</td><td>Haiku</td><td>500</td></tr>
+  <tr><td>world-builder.turn_update</td><td>Sonnet</td><td>1500</td></tr>
+  <tr><td>personal-progression</td><td>Haiku</td><td>300</td></tr>
+  <tr><td>canon-keeper LLM-слой</td><td>Haiku</td><td>200</td></tr>
+  <tr><td>scene-master</td><td>Sonnet</td><td>400</td></tr>
+</table>
+
+<p>Модели выбираются через <code>GameSettings.model_default</code> / <code>model_heavy</code>.
+Меняются в настройках без перекомпиляции.</p>
+
+<h2>Upgrade path (после MVP)</h2>
+
+<ul>
+  <li>Агенты — in-process pip-пакеты. Если понадобится — можно обернуть
+      в FastAPI/MCP и поднять в контейнерах.</li>
+  <li>Канон — JSON-файлы. Масштабируется в SQLite/Postgres без изменения
+      схем (они pydantic, сериализация — отдельная фаза).</li>
+  <li>Бой, долгие квесты, мультиплеер — не ломают ядро, достраиваются
+      новыми агентами.</li>
+</ul>
+
+<h2>Где дальше</h2>
+<ul>
+  <li><a href="dev-guide.html">dev-guide.html</a> — как добавить фичу, ничего не сломав.</li>
+  <li><a href="../docs/loop.md">docs/loop.md</a> — цикл хода вблизи.</li>
+  <li><a href="../docs/agent-map.md">docs/agent-map.md</a> — контракт каждого агента.</li>
+  <li><a href="../docs/canon-model.md">docs/canon-model.md</a> — пачка JSON-файлов, как лежит на диске.</li>
+</ul>
+
+</body>
+</html>

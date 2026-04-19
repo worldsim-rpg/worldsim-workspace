@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "worldsim-prompts"
+version = "0.1.0"
+description = "Shared Anthropic client and prompt framework for worldsim agents."
+requires-python = ">=3.11"
+dependencies = [
+  "anthropic>=0.40.0",
+  "pydantic>=2.6.0",
+  "python-dotenv>=1.0.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
