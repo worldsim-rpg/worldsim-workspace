@@ -2,7 +2,7 @@
 
 {{ONE_LINE_DESCRIPTION}}
 
-Часть мульти-репо системы [worldsim](https://github.com/b3axap/worldsim-workspace).
+Часть мульти-репо системы [worldsim](https://github.com/worldsim-rpg/worldsim-workspace).
 
 ## Контракт
 

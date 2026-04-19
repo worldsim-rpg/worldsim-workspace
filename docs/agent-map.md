@@ -6,7 +6,7 @@ pydantic-модели из `worldsim_schemas`.
 
 ## orchestrator
 
-**Репо:** [`worldsim-orchestrator`](https://github.com/b3axap/worldsim-orchestrator)
+**Репо:** [`worldsim-orchestrator`](https://github.com/worldsim-rpg/worldsim-orchestrator)
 
 **Роль:** единственный "голос" системы. Разговаривает с игроком,
 оркестрирует всех остальных агентов, хранит settings, validators,
@@ -23,7 +23,7 @@ persistence.
 
 ## world-builder
 
-**Репо:** [`worldsim-world-builder`](https://github.com/b3axap/worldsim-world-builder)
+**Репо:** [`worldsim-world-builder`](https://github.com/worldsim-rpg/worldsim-world-builder)
 
 **Роль:** мир-движок. Три подрежима:
 
@@ -41,7 +41,7 @@ plot_state, world_meta. **Не трогает** `player_progression`.
 
 ## canon-keeper
 
-**Репо:** [`worldsim-canon-keeper`](https://github.com/b3axap/worldsim-canon-keeper)
+**Репо:** [`worldsim-canon-keeper`](https://github.com/worldsim-rpg/worldsim-canon-keeper)
 
 **Роль:** проверка консистентности. Вызывается дважды:
 
@@ -60,7 +60,7 @@ plot_state, world_meta. **Не трогает** `player_progression`.
 
 ## scene-master
 
-**Репо:** [`worldsim-scene-master`](https://github.com/b3axap/worldsim-scene-master)
+**Репо:** [`worldsim-scene-master`](https://github.com/worldsim-rpg/worldsim-scene-master)
 
 **Роль:** финальный рендер сцены для игрока. Получает слепок канона,
 фильтрует через `known_facts` и `discovered/visited` флаги, и рисует
@@ -75,7 +75,7 @@ plot_state, world_meta. **Не трогает** `player_progression`.
 
 ## npc-mind
 
-**Репо:** [`worldsim-npc-mind`](https://github.com/b3axap/worldsim-npc-mind)
+**Репо:** [`worldsim-npc-mind`](https://github.com/worldsim-rpg/worldsim-npc-mind)
 
 **Роль:** когда игрок взаимодействует с конкретным NPC (диалог,
 вопрос), этот агент думает от лица NPC. Строго в пределах
@@ -91,7 +91,7 @@ plot_state, world_meta. **Не трогает** `player_progression`.
 
 ## personal-progression
 
-**Репо:** [`worldsim-personal-progression`](https://github.com/b3axap/worldsim-personal-progression)
+**Репо:** [`worldsim-personal-progression`](https://github.com/worldsim-rpg/worldsim-personal-progression)
 
 **Роль:** обновление прогрессии игрока после каждого хода. Решает:
 

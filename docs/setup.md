@@ -17,7 +17,7 @@ mkdir repos && cd repos
 for r in worldsim-workspace worldsim-orchestrator worldsim-world-builder \
          worldsim-canon-keeper worldsim-scene-master worldsim-npc-mind \
          worldsim-personal-progression; do
-  git clone "https://github.com/b3axap/$r.git"
+  git clone "https://github.com/worldsim-rpg/$r.git"
 done
 ```
 

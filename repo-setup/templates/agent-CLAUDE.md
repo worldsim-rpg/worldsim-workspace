@@ -6,7 +6,7 @@
 
 {{ONE_LINE_DESCRIPTION}}
 
-Часть мульти-агентной системы [worldsim](https://github.com/b3axap/worldsim-workspace).
+Часть мульти-агентной системы [worldsim](https://github.com/worldsim-rpg/worldsim-workspace).
 Общая архитектура — в `../worldsim-workspace/docs/architecture.md`.
 
 ## Границы этого агента
