@@ -1,0 +1,45 @@
+# Прогоняем sync-check против всех известных агент-репо, которые
+# клонируются как соседи. Smoke на самой workspace — что sync-all.sh
+# не забыли запустить после правок в packages/.
+
+name: sync-check
+
+on:
+  pull_request:
+    paths:
+      - "packages/**"
+      - "repo-setup/**"
+      - "agents.toml"
+  push:
+    branches: [main]
+
+jobs:
+  sync-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout workspace
+        uses: actions/checkout@v4
+        with:
+          path: worldsim-workspace
+
+      # Для полной проверки нужны агент-репо рядом. В CI workspace
+      # мы ограничиваемся syntax/lint: полный cross-repo drift-check
+      # живёт в каждом агент-репо (см. repo-setup/templates/sync-check.yml).
+      - name: Bash scripts syntax check
+        run: |
+          bash -n worldsim-workspace/repo-setup/sync-all.sh
+          bash -n worldsim-workspace/repo-setup/sync-check.sh
+
+      - name: agents.toml schema check
+        run: |
+          python -m pip install -e worldsim-workspace/packages/schemas
+          python - <<'PY'
+          import tomllib
+          from pathlib import Path
+          from worldsim_schemas import AgentRegistryFile
+          data = tomllib.loads(Path("worldsim-workspace/agents.toml").read_text("utf-8"))
+          reg = AgentRegistryFile.model_validate(data)
+          phases = [a.phase for a in reg.agents]
+          assert len(phases) == len(set(phases)), f"duplicate phases: {phases}"
+          print(f"ok: {len(reg.agents)} agents, {len(set(phases))} phases")
+          PY

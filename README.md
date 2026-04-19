@@ -22,6 +22,7 @@ Source of truth для мульти-агентной системы worldsim. З
 | [canon-model.md](docs/canon-model.md) | Что такое канон, как он устроен, что куда пишется |
 | [constraints.md](docs/constraints.md) | Hard и soft constraints — что проверяется и где |
 | [loop.md](docs/loop.md) | Цикл хода, последовательность вызовов агентов |
+| [ui-terminal.md](docs/ui-terminal.md) | Дизайн и архитектура терминального интерфейса |
 | [branch-strategy.md](docs/branch-strategy.md) | Ветки, синк, релиз |
 | [setup.md](docs/setup.md) | Как развернуть всё локально |
 

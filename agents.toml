@@ -1,0 +1,77 @@
+# Канонический реестр агентов worldsim.
+#
+# Orchestrator читает этот файл при старте и диспатчит вызовы по фазам.
+# Добавить нового агента = добавить секцию [[agents]] здесь + создать
+# репо по шаблону `generate-scaffold.sh`. Код orchestrator при этом НЕ
+# меняется.
+#
+# Схема файла: worldsim_schemas.AgentRegistryFile.
+
+schema_version = "0.1.0"
+
+# --- world-builder: три операции, разные фазы ------------------------------
+
+[[agents]]
+name = "world-builder.init"
+package = "worldsim_world_builder"
+entrypoint = "run_world_init"
+phase = "world_init"
+model_tier = "heavy"
+description = "Генерация стартового мира при создании новой игры."
+
+[[agents]]
+name = "world-builder.location"
+package = "worldsim_world_builder"
+entrypoint = "run_location_detail"
+phase = "location_detail"
+model_tier = "heavy"
+description = "Ленивая детализация локации при первом входе."
+
+[[agents]]
+name = "world-builder.turn"
+package = "worldsim_world_builder"
+entrypoint = "run_turn_update"
+phase = "world_update"
+model_tier = "heavy"
+description = "Обновление мира по интенту игрока."
+
+# --- npc-mind: опциональный, вызывается только для converse ----------------
+
+[[agents]]
+name = "npc-mind"
+package = "worldsim_npc_mind"
+entrypoint = "run"
+phase = "npc_respond"
+optional = true
+model_tier = "default"
+description = "Ответ NPC от первого лица. Активируется только при intent=converse."
+
+# --- personal-progression -------------------------------------------------
+
+[[agents]]
+name = "personal-progression"
+package = "worldsim_personal_progression"
+entrypoint = "run"
+phase = "progression_update"
+model_tier = "default"
+description = "Апдейт прогрессии игрока по результату хода."
+
+# --- canon-keeper ---------------------------------------------------------
+
+[[agents]]
+name = "canon-keeper"
+package = "worldsim_canon_keeper"
+entrypoint = "validate"
+phase = "canon_validate"
+model_tier = "heavy"
+description = "Валидация патчей на консистентность канона перед применением."
+
+# --- scene-master ---------------------------------------------------------
+
+[[agents]]
+name = "scene-master"
+package = "worldsim_scene_master"
+entrypoint = "run"
+phase = "scene_render"
+model_tier = "default"
+description = "Рендер сцены для игрока после применения патчей."

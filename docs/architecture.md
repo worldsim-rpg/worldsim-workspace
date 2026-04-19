@@ -112,36 +112,72 @@ worldsim-personal-progression ← прогрессия игрока
 
 ## Взаимодействие агентов
 
+DAG цикла хода. Каждая LLM-фаза подписана значением `AgentPhase` из
+`agents.toml` — чтобы визуально связать диаграмму с реестром
+(см. [ADR 0002](adr/0002-agent-registry.md)).
+
+```mermaid
+flowchart TD
+    Player([Player input])
+    Intent[Intent parsing<br/><i>orchestrator, LLM</i>]
+    Validate{Hard-constraint<br/>validation}
+    Error([Ошибка игроку])
+    Context[Context build<br/><i>orchestrator</i>]
+    Branch{intent == converse?}
+    NPC[npc_respond<br/><code>NPC_RESPOND</code>]
+    World[world_update<br/><code>WORLD_UPDATE</code>]
+    Progression[progression_update<br/><code>PROGRESSION_UPDATE</code>]
+    CanonVal[canon_validate<br/><code>CANON_VALIDATE</code>]
+    Apply[apply_turn + save_world<br/><i>orchestrator</i>]
+    Scene[scene_render<br/><code>SCENE_RENDER</code>]
+    Log[session_log append<br/><i>orchestrator</i>]
+    Out([Текст сцены игроку])
+
+    Player --> Intent --> Validate
+    Validate -- fail --> Error
+    Validate -- ok --> Context --> Branch
+    Branch -- yes --> NPC -.-> World
+    Branch -- no --> World
+    World --> Progression --> CanonVal --> Apply --> Scene --> Log --> Out
+
+    classDef agent fill:#e8f0ff,stroke:#2d6cdf,color:#000;
+    classDef orch fill:#f5f5f5,stroke:#666,color:#000;
+    classDef opt stroke-dasharray: 4 4;
+    class NPC,World,Progression,CanonVal,Scene agent;
+    class Intent,Context,Apply,Log orch;
+    class NPC opt;
 ```
-PLAYER TEXT
-    │
-    ▼
-Orchestrator: Intent parsing (LLM внутри orchestrator)
-    │
-    ▼
-Orchestrator: Hard-constraint validation ─── нарушение? вернуть игроку ошибку
-    │ ok
-    ▼
-Orchestrator: context build (детерминированный)
-    │
-    ▼
-npc-mind (если Intent касается NPC)   ──┐
-    │                                    │
-    ▼                                    │
-world-builder.turn_update               ─┤──▶ TurnPatch (world-side)
-    │                                    │
-    ▼                                    │
-personal-progression.update             ─┘──▶ TurnPatch (player-side)
-    │
-    ▼
-canon-keeper.validate(patches)
-    │ ok
-    ▼
-Orchestrator: persistence.apply(patches)
-    │
-    ▼
-scene-master.render → текст игроку
+
+Пунктирная стрелка от `npc_respond` — фаза опциональна
+(`manifest.optional = true`, срабатывает только на `intent == converse`).
+Все агент-узлы диспатчатся через `reg.call(phase, ...)` — orchestrator
+не знает про конкретные пакеты (см. [ADR 0002](adr/0002-agent-registry.md)),
+а агенты не знают друг о друге (см. [ADR 0003](adr/0003-no-inter-agent-bus.md)).
+
+### Off-turn pipeline
+
+Две фазы работают **вне** основного цикла:
+
+```mermaid
+flowchart LR
+    NewGame([orchestrator.new]) --> WorldInit[world_init<br/><code>WORLD_INIT</code>]
+    WorldInit --> Save([save_initial])
+
+    Enter([Игрок вошёл в локацию<br/>без full_description]) --> LocDetail[location_detail<br/><code>LOCATION_DETAIL</code>]
+    LocDetail --> Patch([включается в TurnPatch<br/>текущего хода])
+
+    classDef agent fill:#e8f0ff,stroke:#2d6cdf,color:#000;
+    class WorldInit,LocDetail agent;
 ```
+
+- `WORLD_INIT` — одноразовый при создании мира.
+- `LOCATION_DETAIL` — ленивая догенерация при первом входе в локацию,
+  результат вклеивается в основной turn как PatchOp.
+
+## Архитектурные решения
+
+Все значимые развилки фиксируются как ADR — см. [docs/adr/](adr/README.md).
+Перед вопросом "а почему у нас X, а не Y" читаем соответствующий ADR.
 
 ## Что НЕ в MVP
 

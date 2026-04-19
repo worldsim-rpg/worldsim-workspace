@@ -1,5 +1,28 @@
 # Цикл хода
 
+## DAG фаз
+
+```mermaid
+flowchart TD
+    In([player text]) --> Intent[intent parsing]
+    Intent --> Validate{hard<br/>constraints}
+    Validate -- fail --> Err([ошибка игроку])
+    Validate -- ok --> Ctx[context build]
+    Ctx --> Q{converse?}
+    Q -- yes --> NPC[NPC_RESPOND]
+    Q -- no --> World[WORLD_UPDATE]
+    NPC -.-> World
+    World --> Prog[PROGRESSION_UPDATE]
+    Prog --> Canon[CANON_VALIDATE]
+    Canon --> Save[apply + save]
+    Save --> Scene[SCENE_RENDER]
+    Scene --> Out([текст игроку])
+```
+
+Узлы в `UPPER_CASE` — фазы `AgentPhase`, диспатчатся через registry
+(`agents.toml`). Полный вариант с off-turn pipeline и стилизацией —
+в [architecture.md](architecture.md#взаимодействие-агентов).
+
 ## Универсальная схема
 
 ```
