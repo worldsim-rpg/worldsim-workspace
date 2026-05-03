@@ -40,25 +40,34 @@ def render(template: str, **vars: object) -> str:
 
 def extract_json(text: str) -> object:
     """
-    Достаёт JSON из ответа LLM. Поддерживает три варианта:
+    Достаёт JSON из ответа LLM. Порядок попыток:
       1. чистый JSON на всю строку;
       2. ```json ... ``` блок;
-      3. просто JSON в тексте — берём первый валидный объект/массив.
+      3. первый валидный { } по балансу скобок;
+      4. первый валидный [ ] по балансу скобок.
     """
 
     text = text.strip()
-    # Прямой парс
+
+    # 1. Прямой парс
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
 
-    # ```json ... ```
-    m = re.search(r"```(?:json)?\s*(.+?)```", text, re.DOTALL)
-    if m:
-        return json.loads(m.group(1).strip())
+    # 2. ```json ... ``` или ``` ... ```
+    # Ищем открывающий фенс; закрывающего может не быть (обрезка по max_tokens).
+    fence_m = re.search(r"```(?:json)?\s*\n?", text)
+    if fence_m:
+        content_start = fence_m.end()
+        end_idx = text.rfind("```", content_start)
+        content = text[content_start:end_idx].strip() if end_idx > content_start else text[content_start:].strip()
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            pass  # Fall through
 
-    # Первый { ... } или [ ... ] по балансу скобок
+    # 3 & 4. Первый валидный { } или [ ] по балансу скобок
     for open_ch, close_ch in (("{", "}"), ("[", "]")):
         start = text.find(open_ch)
         if start == -1:

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Callable
 
 import anthropic
 from dotenv import load_dotenv
@@ -18,6 +21,10 @@ class CallLog:
     duration_s: float
 
 
+# Сигнатура колбэка dev-лога: принимает dict-запись, ничего не возвращает.
+DevLogCallback = Callable[[dict], None]
+
+
 class AnthropicClient:
     """
     Единый клиент для всех агентов.
@@ -25,9 +32,16 @@ class AnthropicClient:
     - Читает ANTHROPIC_API_KEY из окружения (или .env рядом с вызовом).
     - Поддерживает WORLDSIM_DEBUG=1 — печатает system/user/response в stderr.
     - Делает простой retry на rate-limit / transient errors.
+    - Принимает опциональный dev_log_callback: вызывается после каждого
+      LLM-вызова с dict-записью для developer JSONL-лога.
     """
 
-    def __init__(self, api_key: str | None = None, debug: bool | None = None):
+    def __init__(
+        self,
+        api_key: str | None = None,
+        debug: bool | None = None,
+        dev_log_callback: DevLogCallback | None = None,
+    ):
         load_dotenv()
         key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         if not key:
@@ -37,7 +51,12 @@ class AnthropicClient:
             )
         self._client = anthropic.Anthropic(api_key=key)
         self._debug = debug if debug is not None else os.environ.get("WORLDSIM_DEBUG") == "1"
+        self._dev_log_callback = dev_log_callback
         self.last_call: CallLog | None = None
+
+        # Контекст для dev-лога, проставляется извне перед вызовом агента.
+        self._log_turn: int | None = None
+        self._log_agent: str | None = None
 
     def complete(
         self,
@@ -56,6 +75,8 @@ class AnthropicClient:
 
         attempt = 0
         start = time.time()
+        error_msg: str | None = None
+        msg = None
         while True:
             try:
                 msg = self._client.messages.create(
@@ -69,6 +90,21 @@ class AnthropicClient:
             except (anthropic.RateLimitError, anthropic.APIStatusError) as e:
                 attempt += 1
                 if attempt > max_retries:
+                    error_msg = str(e)
+                    duration = time.time() - start
+                    if self._dev_log_callback is not None:
+                        self._dev_log_callback(
+                            _make_dev_entry(
+                                turn=self._log_turn,
+                                agent=self._log_agent,
+                                model=model,
+                                prompt_tokens=0,
+                                completion_tokens=0,
+                                duration_ms=int(duration * 1000),
+                                system_prompt_hash=_hash8(system),
+                                error=error_msg,
+                            )
+                        )
                     raise
                 delay = 2**attempt
                 _log(f"[retry {attempt}] {type(e).__name__}, sleeping {delay}s")
@@ -84,6 +120,20 @@ class AnthropicClient:
             duration_s=duration,
         )
 
+        if self._dev_log_callback is not None:
+            self._dev_log_callback(
+                _make_dev_entry(
+                    turn=self._log_turn,
+                    agent=self._log_agent,
+                    model=model,
+                    prompt_tokens=msg.usage.input_tokens,
+                    completion_tokens=msg.usage.output_tokens,
+                    duration_ms=int(duration * 1000),
+                    system_prompt_hash=_hash8(system),
+                    error=None,
+                )
+            )
+
         if self._debug:
             _log(
                 f"=== RESPONSE ({msg.usage.input_tokens}→{msg.usage.output_tokens} tok, "
@@ -91,6 +141,36 @@ class AnthropicClient:
             )
 
         return text
+
+
+def _hash8(text: str) -> str:
+    return hashlib.sha256(text.encode()).hexdigest()[:8]
+
+
+def _make_dev_entry(
+    *,
+    turn: int | None,
+    agent: str | None,
+    model: str,
+    prompt_tokens: int,
+    completion_tokens: int,
+    duration_ms: int,
+    system_prompt_hash: str,
+    error: str | None,
+) -> dict:
+    now = datetime.now(timezone.utc)
+    ts = now.strftime("%Y-%m-%dT%H:%M:%S.") + f"{now.microsecond // 1000:03d}Z"
+    return {
+        "ts": ts,
+        "turn": turn,
+        "agent": agent,
+        "model": model,
+        "prompt_tokens": prompt_tokens,
+        "completion_tokens": completion_tokens,
+        "duration_ms": duration_ms,
+        "system_prompt_hash": system_prompt_hash,
+        "error": error,
+    }
 
 
 def _log(msg: str) -> None:
