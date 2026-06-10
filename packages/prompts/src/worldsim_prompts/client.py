@@ -42,7 +42,7 @@ class AnthropicClient:
         debug: bool | None = None,
         dev_log_callback: DevLogCallback | None = None,
     ):
-        load_dotenv()
+        load_dotenv(override=True)
         key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         if not key:
             raise RuntimeError(

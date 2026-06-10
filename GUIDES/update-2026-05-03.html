@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorldSim — Dev Update 2026-05-03</title>
+<style>
+  :root {
+    --bg:        #0d1117;
+    --surface:   #161b22;
+    --border:    #30363d;
+    --text:      #e6edf3;
+    --muted:     #7d8590;
+    --accent:    #58a6ff;
+    --green:     #3fb950;
+    --yellow:    #d29922;
+    --red:       #f85149;
+    --purple:    #bc8cff;
+    --orange:    #f0883e;
+    --mono:      'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    --sans:      'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.65;
+    padding: 48px 24px 80px;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ── */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 28px;
+    margin-bottom: 40px;
+  }
+  .header-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+  .tag-dev   { color: var(--accent);  border-color: #1f4a73; background: #0d2137; }
+  .tag-date  { color: var(--muted);   border-color: var(--border); background: transparent; }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .header h1 span { color: var(--accent); }
+  .header-sub {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  /* ── Sections ── */
+  .section {
+    margin-bottom: 44px;
+  }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: .05em;
+    min-width: 24px;
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -.01em;
+  }
+  .section-badge {
+    margin-left: auto;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 3px;
+  }
+  .badge-done  { background: #1a3825; color: var(--green);  }
+  .badge-warn  { background: #3a2100; color: var(--yellow); }
+  .badge-root  { background: #2d1b00; color: var(--orange); }
+  .badge-next  { background: #1a2040; color: var(--purple); }
+  .badge-git   { background: #1a1f2e; color: var(--accent); }
+
+  /* ── Cards ── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 18px;
+  }
+  .card-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .card-title .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+  .card p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .card code {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: #0d1117;
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: #f0883e;
+  }
+
+  /* ── Bug list ── */
+  .bug-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .bug-item {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--red);
+    border-radius: 0 6px 6px 0;
+    padding: 11px 14px;
+    align-items: start;
+  }
+  .bug-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--red);
+    font-weight: 700;
+    padding-top: 1px;
+  }
+  .bug-body {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.55;
+  }
+  .bug-body strong {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--yellow);
+    font-weight: 600;
+  }
+  .bug-body em {
+    font-style: normal;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  /* ── Root cause box ── */
+  .root-box {
+    background: var(--surface);
+    border: 1px solid #4a3000;
+    border-left: 4px solid var(--yellow);
+    border-radius: 0 6px 6px 0;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .root-box p {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.7;
+    margin-bottom: 10px;
+  }
+  .root-box p:last-child { margin-bottom: 0; }
+  .math-block {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px 14px;
+    color: var(--orange);
+    margin: 10px 0;
+    display: inline-block;
+  }
+  .highlight { color: var(--yellow); font-weight: 600; }
+
+  /* ── Commit list ── */
+  .commit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .commit-item {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 11px 14px;
+  }
+  .commit-hash {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--purple);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .commit-msg {
+    font-size: 13px;
+    color: var(--text);
+  }
+  .commit-msg .commit-type {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 6px;
+    font-weight: 600;
+  }
+  .commit-msg .type-feat { background: #1a3825; color: var(--green); }
+  .commit-msg .type-docs { background: #1a2040; color: var(--accent); }
+  .commit-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* ── Plan table ── */
+  .plan-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .plan-table th {
+    text-align: left;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .plan-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #1c2128;
+    vertical-align: top;
+  }
+  .plan-table tr:last-child td { border-bottom: none; }
+  .plan-table tr:hover td { background: #161b22; }
+  .plan-table .phase-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--purple);
+    font-weight: 600;
+  }
+  .plan-table .phase-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+  }
+  .plan-table .phase-tokens {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--green);
+  }
+  .plan-table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .impact-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .impact-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .impact-label {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 6px;
+  }
+  .impact-before {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--red);
+    font-family: var(--mono);
+  }
+  .impact-after {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--green);
+    font-family: var(--mono);
+  }
+  .impact-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .arrow { color: var(--muted); font-size: 14px; margin: 0 4px; }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .footer code {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-meta">
+      <span class="tag tag-dev">Dev Update</span>
+      <span class="tag tag-date">2026-05-03</span>
+    </div>
+    <h1><span>WorldSim</span> — Dev Session Report</h1>
+    <p class="header-sub">worldsim-rpg / worldsim-workspace · ветка <code style="font-family:monospace;color:#58a6ff;font-size:13px">dev</code> · прогон на 3 хода, анализ багов, план рефакторинга</p>
+  </header>
+
+  <!-- Section 1: Done -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-title">Что построено</span>
+      <span class="section-badge badge-done">DONE</span>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>worldsim.bat</div>
+        <p>Батник запуска для Windows. Создаёт <code>.venv</code>, устанавливает все 7 пакетов, открывает <code>.env</code> при первом запуске. Команды: <code>new</code>, <code>play</code>, <code>worlds</code>, <code>inspect</code>, <code>--install</code>, <code>--update</code>, <code>--help</code>.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>Логирование (logger.py)</div>
+        <p><b style="color:var(--text)">Dev-лог</b> JSONL: ts, agent, model, tokens, duration_ms, prompt_hash, error → <code>logs/dev/&lt;id&gt;_dev.jsonl</code>.<br><br><b style="color:var(--text)">Player-лог</b> plain text: ход, ввод игрока, рендер сцены → <code>logs/player/&lt;id&gt;_player.txt</code>.<br><br>Хук прозрачный: <code>_dev_log_callback</code> в <code>AnthropicClient</code>, <code>loop.py</code> проставляет <code>_log_agent</code> и <code>_log_turn</code> перед каждой фазой.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>/save и /restart</div>
+        <p><code>/save</code> уже работал, стал виден в hint при старте.<br><br><code>/restart</code>: при создании мира сохраняет <code>initial/</code> снапшот. Команда мутирует <code>snapshot</code> in-place до tick=0, спрашивает <code>[y/N]</code>, перезаписывает сейв и показывает welcome-сцену.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>Окружение</div>
+        <p><code>.venv</code> создан на Python 3.14.4. Все 7 пакетов установлены и импортируются: <code>worldsim_schemas</code>, <code>worldsim_prompts</code>, <code>worldsim_orchestrator</code>, <code>worldsim_world_builder</code>, <code>worldsim_canon_keeper</code>, <code>worldsim_scene_master</code>, <code>worldsim_npc_mind</code>, <code>worldsim_personal_progression</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Bugs -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <span class="section-title">Что обнаружили — тест-прогон</span>
+      <span class="section-badge badge-warn">8 БАГОВ</span>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:16px">
+      Запустили <code style="font-family:monospace;font-size:12px;color:#f0883e">test_run.py</code> — headless прогон на 3 хода. Мир генерировался по содержанию правильно,
+      но система падала на <code style="font-family:monospace;font-size:12px;color:#f85149">pydantic.ValidationError</code> при каждой попытке. Каждый запуск — новая ошибка на новом поле.
+    </p>
+    <div class="bug-list">
+      <div class="bug-item">
+        <span class="bug-num">B1</span>
+        <div class="bug-body">
+          <strong>extract_json</strong> — не было <code style="font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">try/except</code> вокруг code-fence парсинга.
+          <em>→ если закрывающий ``` отсутствует — исключение не ловится, падение.</em>
+        </div>
+      </div>
+      <div class="bug-item">
+        <span class="bug-num">B2</span>
+        <div class="bug-body">
+          <strong>max_tokens=8192</strong> в <code style="font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">world_init</code>.
+          Ответ LLM ~20 000 символов → JSON обрезается, закрывающий ``` не попадает в ответ.
+          <em>→ Увеличено до 16 000.</em>
+        </div>
+      </div>
+      <div class="bug-item">
+        <span class="bug-num">B3</span>
+        <div class="bug-body">
+          <strong>Character.goals</strong> — LLM возвращал <code style="font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">["строка"]</code> вместо <code style="font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">[{"text":"…","priority":0.5}]</code>.
+          <em>→ Добавлен coerce в _assemble_snapshot.</em>
+        </div>
+      </div>
+      <div class="bug-item">
+        <span class="bug-num">B4</span>
+        <div class="bug-body">
+          <strong>Faction.public_role</strong> — обязательное поле, LLM его пропускал.
+          <em>→ Fallback на поле description.</em>
+        </div>
+      </div>
+      <div class="bug-item">
+        <span class="bug-num">B5</span>
+        <div class="bug-body">
+          <strong>Character.hidden_traits / public_traits / knowledge / goals</strong> — LLM возвращал <code style="font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">null</code> вместо <code style="font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">[]</code>.
+          <em>→ Нормализация всех list-полей в coerce.</em>
+        </div>
+      </div>
+      <div class="bug-item">
+        <span class="bug-num">B6</span>
+        <div class="bug-body">
+          <strong>Character.location_id</strong> — отсутствовало у персонажа игрока (<code style="font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">pc</code>), хотя поле обязательное.
+          <em>→ Fallback на первую локацию мира.</em>
+        </div>
+      </div>
+      <div class="bug-item">
+        <span class="bug-num">B7</span>
+        <div class="bug-body">
+          <strong>Arc.title</strong> — LLM использовал <code style="font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">name</code> вместо <code style="font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">title</code>.
+          <strong>Arc.involved_entities</strong> — вернул <code style="font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">{"characters":[…],"factions":[…]}</code> вместо плоского списка ID.
+          Те же проблемы повторились в <code style="font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">PlotState.active_arcs</code>.
+          <em>→ Coerce для Arc в обоих местах.</em>
+        </div>
+      </div>
+      <div class="bug-item">
+        <span class="bug-num">B8</span>
+        <div class="bug-body">
+          <strong>PatchOp.entity_type</strong> — LLM использовал <code style="font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">"player"</code> вместо enum-значения <code style="font-family:monospace;font-size:11px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">"player_progression"</code>.
+          <em>→ Обнаружен на первом ходу, не исправлен (заблокирован на B7).</em>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Root cause -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <span class="section-title">Корневая причина</span>
+      <span class="section-badge badge-root">АНАЛИЗ</span>
+    </div>
+    <div class="root-box">
+      <p>
+        <span class="highlight">Один LLM-вызов генерирует 8 типов сущностей и ~40 объектов в одном JSON.</span>
+        Промпт <code style="font-family:monospace;font-size:12px;background:#0d1117;padding:1px 4px;border-radius:3px;color:#f0883e">world_init.md</code> не содержит inline-схем полей —
+        только верхнеуровневый пример структуры. LLM угадывает типы вложенных объектов
+        и систематически ошибается на одних и тех же полях.
+      </p>
+      <div class="math-block">p_success = 0.97^40 ≈ 0.29  →  ~70% запусков падают с ValidationError</div>
+      <p>
+        Каждый прогон открывал новый баг на другом поле: coerce-слой только маскирует симптомы,
+        не устраняет причину. Система написана архитектурно правильно —
+        <span class="highlight">проблема только в одном: world_init слишком большой для одного вызова.</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- Section 4: Commits -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <span class="section-title">Что зафиксировано в git</span>
+      <span class="section-badge badge-git">DEV BRANCH</span>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:14px">
+      Репо: <code style="font-family:monospace;font-size:12px;color:#58a6ff">worldsim-rpg/worldsim-workspace</code> · ветка <code style="font-family:monospace;font-size:12px;color:#58a6ff">dev</code>
+    </p>
+    <div class="commit-list">
+      <div class="commit-item">
+        <span class="commit-hash">fc5f3a6</span>
+        <div>
+          <div class="commit-msg">
+            <span class="commit-type type-feat">feat</span>
+            prompts: add dev/player logging hooks + robust extract_json
+          </div>
+          <div class="commit-desc">AnthropicClient._dev_log_callback; extract_json: обработка обрезанного code-fence</div>
+        </div>
+      </div>
+      <div class="commit-item">
+        <span class="commit-hash">2682d6e</span>
+        <div>
+          <div class="commit-msg">
+            <span class="commit-type type-docs">docs</span>
+            plans: план B — поэтапная генерация мира
+          </div>
+          <div class="commit-desc">plans/phased-world-init.md — 5 фаз, inline-схемы, retry-логика, оценка 3–4 ч работы</div>
+        </div>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:12px;margin-top:12px">
+      Изменения в агент-репо (<code style="font-family:monospace;font-size:11px;color:#58a6ff">worldsim-world-builder</code>, <code style="font-family:monospace;font-size:11px;color:#58a6ff">worldsim-orchestrator</code>) — coerce и логи —
+      не закоммичены, нужно оформить отдельными PR после реализации плана B.
+    </p>
+  </section>
+
+  <!-- Section 5: Plan B -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <span class="section-title">План B — следующий шаг</span>
+      <span class="section-badge badge-next">ПРИОРИТЕТ: ВЫСОКИЙ</span>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:16px">
+      Разбить <code style="font-family:monospace;font-size:12px;color:#f0883e">run_world_init</code> на 5 последовательных вызовов.
+      Каждый — один тип сущностей, малый JSON, inline-схема полей, retry с hint при ошибке валидации.
+    </p>
+    <div class="plan-table-wrap">
+      <table class="plan-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Функция</th>
+            <th>Выход</th>
+            <th>Max tokens</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="phase-num">1</span></td>
+            <td><span class="phase-name">_gen_meta_locations</span></td>
+            <td>WorldMeta + list[Location]</td>
+            <td><span class="phase-tokens">3 000</span></td>
+          </tr>
+          <tr>
+            <td><span class="phase-num">2</span></td>
+            <td><span class="phase-name">_gen_factions</span></td>
+            <td>list[Faction]</td>
+            <td><span class="phase-tokens">2 000</span></td>
+          </tr>
+          <tr>
+            <td><span class="phase-num">3</span></td>
+            <td><span class="phase-name">_gen_characters</span></td>
+            <td>list[Character] (incl. pc)</td>
+            <td><span class="phase-tokens">4 000</span></td>
+          </tr>
+          <tr>
+            <td><span class="phase-num">4</span></td>
+            <td><span class="phase-name">_gen_secrets_arcs</span></td>
+            <td>list[Secret] + list[Arc]</td>
+            <td><span class="phase-tokens">3 000</span></td>
+          </tr>
+          <tr>
+            <td><span class="phase-num">5</span></td>
+            <td><span class="phase-name">_gen_plot_player</span></td>
+            <td>PlotState + PlayerProgression</td>
+            <td><span class="phase-tokens">2 000</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="impact-box">
+      <div class="impact-card">
+        <div class="impact-label">Ошибки валидации при генерации</div>
+        <div>
+          <span class="impact-before">~70%</span>
+          <span class="arrow">→</span>
+          <span class="impact-after">&lt;5%</span>
+        </div>
+        <div class="impact-desc">за счёт изоляции и retry на этапе</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-label">Размер одного LLM-ответа</div>
+        <div>
+          <span class="impact-before">20k</span>
+          <span class="arrow">→</span>
+          <span class="impact-after">2–4k</span>
+        </div>
+        <div class="impact-desc">символов на вызов</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-label">Отлаживаемость</div>
+        <div style="font-size:13px;color:var(--text);margin-top:6px">«сломалось в 40 объектах»</div>
+        <div style="font-size:13px;color:var(--green);margin-top:4px">→ «сломался этап 3, вот объект»</div>
+        <div class="impact-desc">конкретный этап и сущность</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-label">Оценка реализации</div>
+        <div style="font-size:22px;font-weight:700;color:var(--purple);font-family:var(--mono);margin-top:6px">3–4 ч</div>
+        <div class="impact-desc">5 промптов + рефакторинг agent.py + тесты</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <span>worldsim-rpg / worldsim-workspace · <code>plans/phased-world-init.md</code></span>
+    <span>Claude Sonnet 4.6 · 2026-05-03</span>
+  </footer>
+
+</div>
+</body>
+</html>
